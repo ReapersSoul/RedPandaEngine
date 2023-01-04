@@ -1,4 +1,5 @@
 #include "Graphics.h"
+#include "Math.h"
 
 std::vector<Math::Vec3<float>> Graphics::MeshTools::Mesh::ApplyTransform()
 {
