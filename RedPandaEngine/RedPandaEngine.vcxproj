@@ -66,6 +66,9 @@
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="E:\SDKs\PropSheets\Luax64.props" />
+    <Import Project="E:\SDKs\PropSheets\Java.props" />
+    <Import Project="E:\SDKs\PropSheets\CSharp.props" />
+    <Import Project="E:\SDKs\PropSheets\Python.props" />
     <Import Project="E:\SDKs\PropSheets\IMGUI.props" />
     <Import Project="E:\SDKs\PropSheets\GLM.props" />
     <Import Project="E:\SDKs\PropSheets\Glewx64.props" />
@@ -147,11 +150,13 @@
     <ClCompile Include="E:\SDKs\imgui\imgui_draw.cpp" />
     <ClCompile Include="E:\SDKs\imgui\imgui_tables.cpp" />
     <ClCompile Include="E:\SDKs\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="Graphics.cpp" />
     <ClCompile Include="RedPandaEngine.cpp" />
     <ClCompile Include="TextRenderer.cpp" />
     <ClCompile Include="util.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CSharp.h" />
     <ClInclude Include="DEVICE.h" />
     <ClInclude Include="E:\SDKs\imgui\backends\imgui_impl_glfw.h" />
     <ClInclude Include="E:\SDKs\imgui\backends\imgui_impl_opengl2.h" />
@@ -164,10 +169,15 @@
     <ClInclude Include="E:\SDKs\imgui\imstb_textedit.h" />
     <ClInclude Include="E:\SDKs\imgui\imstb_truetype.h" />
     <ClInclude Include="Graphics.h" />
+    <ClInclude Include="Java.h" />
     <ClInclude Include="Kinect.h" />
     <ClInclude Include="Lovense_Device.h" />
+    <ClInclude Include="Lua.h" />
     <ClInclude Include="Math.h" />
+    <ClInclude Include="Native.h" />
     <ClInclude Include="Physics.h" />
+    <ClInclude Include="Python.h" />
+    <ClInclude Include="Scripting_Language.h" />
     <ClInclude Include="TextRenderer.hpp" />
     <ClInclude Include="util.h" />
   </ItemGroup>

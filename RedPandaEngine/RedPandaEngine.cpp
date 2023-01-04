@@ -34,6 +34,9 @@ void Camera(GLFWwindow* wind, int Window_Width, int Window_Height) {
 
 void Draw(GLFWwindow* wind, int Window_Width, int Window_Height) {
     //DRAW CALL
+    Graphics::MeshTools::Shapes::Quad q;
+
+    q.draw();
 }
 
 int main()

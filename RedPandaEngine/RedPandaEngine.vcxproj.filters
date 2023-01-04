@@ -22,6 +22,9 @@
     <Filter Include="Header Files\Graphics">
       <UniqueIdentifier>{44b6924f-e90c-42b7-94a9-840ec63383e4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Scripting Languages">
+      <UniqueIdentifier>{cc3ef2f2-4373-4872-9fee-3bf9de151ec8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RedPandaEngine.cpp">
@@ -56,6 +59,9 @@
     </ClCompile>
     <ClCompile Include="E:\SDKs\imgui\backends\imgui_impl_opengl3.cpp">
       <Filter>Header Files\IMGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -112,6 +118,24 @@
     </ClInclude>
     <ClInclude Include="Physics.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Scripting_Language.h">
+      <Filter>Header Files\Scripting Languages</Filter>
+    </ClInclude>
+    <ClInclude Include="Java.h">
+      <Filter>Header Files\Scripting Languages</Filter>
+    </ClInclude>
+    <ClInclude Include="CSharp.h">
+      <Filter>Header Files\Scripting Languages</Filter>
+    </ClInclude>
+    <ClInclude Include="Lua.h">
+      <Filter>Header Files\Scripting Languages</Filter>
+    </ClInclude>
+    <ClInclude Include="Python.h">
+      <Filter>Header Files\Scripting Languages</Filter>
+    </ClInclude>
+    <ClInclude Include="Native.h">
+      <Filter>Header Files\Scripting Languages</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

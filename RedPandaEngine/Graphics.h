@@ -73,7 +73,7 @@ namespace EventStream {
 namespace Graphics {
 
     namespace Util {
-        glm::vec3 HSVtoRGB(float H, float S, float V) {
+        static glm::vec3 HSVtoRGB(float H, float S, float V) {
             if (H > 360 || H < 0 || S>100 || S < 0 || V>100 || V < 0) {
                 return glm::vec3(0);
             }
@@ -104,7 +104,7 @@ namespace Graphics {
             return glm::vec3((r + m) * 255, (g + m) * 255, (b + m) * 255);
         }
 
-        glm::vec3 HSVtoRGB(glm::vec3 HSV) {
+        static glm::vec3 HSVtoRGB(glm::vec3 HSV) {
             float H = HSV.x;
             float S = HSV.y;
             float V = HSV.z;
@@ -137,13 +137,13 @@ namespace Graphics {
             }
             return glm::vec3((r + m), (g + m), (b + m));
         }
-        float Dist(glm::vec2 one, glm::vec2 two) {
+        static float Dist(glm::vec2 one, glm::vec2 two) {
             glm::vec2 squared = (two - one) * (two - one);
             return sqrt(squared.x + squared.y);
         }
     }    
 
-    GLFWwindow* InteractionWindow;
+    static GLFWwindow* InteractionWindow;
     
     //callbacks
     static void error_callback(int error, const char* description);
@@ -261,20 +261,20 @@ namespace Graphics {
                 glViewport(0, 0, windowWidth, windowHeight);
 
                 ProcessEvents();
-                // Draw stuff
-                glClearColor(0.0, 00, 00, 1.0);
-                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+                    // Draw stuff
+                    glClearColor(0.0, 00, 00, 1.0);
+                    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-                glMatrixMode(GL_PROJECTION_MATRIX);
-                glLoadIdentity();
-                //transform world here
-                //camera
-                Camera_function(window, windowWidth, windowHeight);
-                //end
-                //end
-                glMatrixMode(GL_MODELVIEW_MATRIX);
-                //draw objects here
-                Draw_function(window, windowWidth, windowHeight);
+                    glMatrixMode(GL_PROJECTION_MATRIX);
+                    glLoadIdentity();
+                    //transform world here
+                    //camera
+                    Camera_function(window, windowWidth, windowHeight);
+                    //end
+                    //end
+                    glMatrixMode(GL_MODELVIEW_MATRIX);
+                    //draw objects here
+                    Draw_function(window, windowWidth, windowHeight);
                 //end
                 //gui
                 ImGui_ImplOpenGL3_NewFrame();
@@ -314,9 +314,9 @@ namespace Graphics {
         };
     };
 
-    Window* Callback_Window;
+    static Window* Callback_Window;
 
-    void SetCallBackWindow(Window* Cb_Window) {
+    static void SetCallBackWindow(Window* Cb_Window) {
         Callback_Window = Cb_Window;
     }
 
@@ -417,15 +417,46 @@ namespace Graphics {
         Callback_Window->PushEvent(e);
     }
 
+    namespace TextureTools {
+        class Texture {
+            GLuint ID;
+            int width,height,depth;
+        };
+    }
+
     namespace MeshTools {
         class Mesh {
+        protected:
             std::vector<Math::Vec3<float>> Verts;
             std::vector<Math::Vec2<int>> Edges;
+            std::vector<Math::Vec3<int>> TexCoOrd;
             std::vector<std::vector<int>> Faces;
             Math::Vec3<float> position,scale,rotation;
+            std::vector<TextureTools::Texture*> Textures;
+
+
+            std::vector<Math::Vec3<float>> ApplyTransform();
+        public:
+            void Draw();
         };
 
+        namespace Shapes {
+            class Quad :public Mesh {
+            public:
+                Quad();
+                ~Quad();
+            };
+        }
+    }
 
+    namespace ViewPortTools {
+        class ViewPort {
+
+        };
+
+        class Camera {
+
+        };
     }
 
 }

@@ -1,0 +1,156 @@
+{
+  "main": {
+    "id": "2d5b17f9d521b6d6",
+    "type": "split",
+    "children": [
+      {
+        "id": "a670391e1c2051bf",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "70335ec1ee4768c2",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Scripting Languages/Scripting Languages.md",
+                "mode": "source",
+                "source": false
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "ac68de76fb6c667e",
+    "type": "split",
+    "children": [
+      {
+        "id": "6946890fe369a842",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "ed22cb455d59633f",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical"
+              }
+            }
+          },
+          {
+            "id": "d18d53f58bce5a84",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              }
+            }
+          },
+          {
+            "id": "c25c0f3977d33640",
+            "type": "leaf",
+            "state": {
+              "type": "starred",
+              "state": {}
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "81daf3e66f260348",
+    "type": "split",
+    "children": [
+      {
+        "id": "33df3948f9db5e73",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "abae56c47f5e2375",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "Scripting Languages/Scripting Languages.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              }
+            }
+          },
+          {
+            "id": "18d75c09c55fe5b9",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "Scripting Languages/Scripting Languages.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              }
+            }
+          },
+          {
+            "id": "67c66af32689d500",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true
+              }
+            }
+          },
+          {
+            "id": "468af07b7d57b573",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "Scripting Languages/Scripting Languages.md"
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false
+    }
+  },
+  "active": "70335ec1ee4768c2",
+  "lastOpenFiles": [
+    "Scripting Languages/Python/Python.md",
+    "Scripting Languages/Scripting Languages.md",
+    "Documentation/The Redpanda Engine.md",
+    "Engine/Engine.md"
+  ]
+}
