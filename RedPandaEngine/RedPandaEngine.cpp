@@ -3,7 +3,7 @@
 
 #include <iostream>
 #include "Graphics.h"
-#include "Java.h"
+#include "Lua.h"
 
 class PrimaryEventHandler :public EventStream::EventProcessor {
 public:
@@ -40,8 +40,8 @@ void Draw(GLFWwindow* wind, int Window_Width, int Window_Height) {
 
 int main()
 {
-    Java java;
-    java.Init();
+    Lua lua;
+    lua.Init();
 
 
     SetCallBackWindow(&wind);

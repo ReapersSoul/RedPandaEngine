@@ -2,24 +2,32 @@
 #include <string>
 #include <functional>
 #include <stdarg.h>
+#include <tuple>
 
 class Scripting_Languge {
-	virtual bool Init();
-	virtual bool Deconstruct();
-	virtual bool LoadScript(std::string path);
-	virtual bool LoadString(std::string str);
-	virtual bool RunScript(std::string path);
-	virtual bool RunString(std::string str);
+public:
+	class Table;
+	typedef std::tuple<bool,double,int,std::string,void *,Table> Var;
+	class Table {
+		std::map<std::string, Var> data;
+	};
+protected:
+	virtual bool Init() { return false; };
+	virtual bool Deconstruct() { return false; };
+	virtual bool LoadScript(std::string path) { return false; };
+	virtual bool LoadString(std::string str) { return false; };
+	virtual bool RunScript(std::string path) { return false; };
+	virtual bool RunString(std::string str) { return false; };
 	template<typename T>
-	bool RegisterFunction(std::string Name, std::function<T> f);
+	bool RegisterFunction(std::string Name, std::function<T> f) { return false; };
 	template<typename T>
-	bool RegisterVar(std::string Name, T value);
+	bool RegisterVar(std::string Name, T value) { return false; };
 	template<typename T>
-	bool RegisterLinkedVar(std::string Name, T* value);
+	bool RegisterLinkedVar(std::string Name, T* value) { return false; };
 	template<typename T>
-	bool SetVar(std::string Name, T val);
+	bool SetVar(std::string Name, T val) { return false; };
 	template<typename T>
-	T GetVar(std::string Name);
+	T GetVar(std::string Name) { return false; };
 	template<typename T>
-	T CallFunction(std::string Name, ...);
+	T CallFunction(std::string Name, ...) { return false; };
 };
