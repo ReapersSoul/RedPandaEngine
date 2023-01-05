@@ -42,8 +42,15 @@ int main()
 {
     Lua lua;
     lua.Init();
-
-
+    try {
+        lua.RegisterVar("Fal", "fuck");
+        lua.RunString("print(Fal)");
+        lua.SetVar("Fal", 100);
+        lua.RunString("print(Fal-20)");
+    }
+    catch (Scripting_Languge::Exception e) {
+        std::cout << e.Id << "\n" << e.Desc << "\n";
+    }
     SetCallBackWindow(&wind);
     wind.Set_Camera_function(Camera);
     wind.Set_Draw_function(Draw);

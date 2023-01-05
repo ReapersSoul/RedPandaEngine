@@ -6,6 +6,16 @@
 
 class Scripting_Languge {
 public:
+	struct Exception {
+		Exception(std::string DESC, std::string ID="",int nid=0) {
+			Id = ID;
+			Desc = DESC;
+			Num_Id = nid;
+		}
+		int Num_Id;
+		std::string Id, Desc;
+	};
+
 	class Table;
 	typedef std::tuple<bool,double,int,std::string,void *,Table> Var;
 	class Table {

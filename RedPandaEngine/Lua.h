@@ -20,34 +20,70 @@ public:
     }
 
     bool LoadScript(std::string path) {
-        luaL_loadfile(L, path.c_str());
+        if (luaL_loadfile(L, path.c_str()))
+        {
+            throw Exception("FUCK!!!","Unable to find lua file");
+        }
         return true;
     };
     bool LoadString(std::string str) {
-        luaL_loadstring(L, str.c_str());
+        if (luaL_loadstring(L, str.c_str()))
+        {
+            throw Exception("FUCK!!!", "Unable to find lua file");
+        }
         return true;
     };
+
     bool RunScript(std::string path) {
-        luaL_dofile(L, path.c_str());
+        LoadScript(path);
+
+        int error = lua_pcall(L, 0, 0, 0);
+        while (error && lua_gettop(L))
+        {
+            int stack= lua_gettop(L);
+            int err= error;
+            std::string message = lua_tostring(L, -1);
+            lua_pop(L, 1);
+            error = lua_pcall(L, 0, 0, 0);
+            throw Exception(message,"Stack: " + std::to_string(stack) + " Error: " + std::to_string(err));
+        }
         return true;
     };
+
     bool RunString(std::string str) {
-        luaL_dostring(L, str.c_str());
+        LoadString(str);
+
+        int error = lua_pcall(L, 0, 0, 0);
+        while (error && lua_gettop(L))
+        {
+            int stack = lua_gettop(L);
+            int err = error;
+            std::string message = lua_tostring(L, -1);
+            lua_pop(L, 1);
+            error = lua_pcall(L, 0, 0, 0);
+            throw Exception(message, "Stack: " + std::to_string(stack) + " Error: " + std::to_string(err));
+        }
         return true;
     };
 
 
-
+    //TODO::
     template<typename T,int NumArgs>
-    bool RegisterFunction(std::string Name, std::function<T> f) {
-        lua_register(L, Name.c_str(), [&f](lua_State* L) {
-            
+    bool RegisterFunction(std::string Name, std::function<T(...)> f) {
+        lua_register(L, Name.c_str(), [](lua_State* L) {
+            std::vector<Var> args;
+            for (int i = 0; i < NumArgs; i++)
+            {
+                //get arguments from lua
+            }
+            f;
+
             return 1;
             });
         return true;
     }
 
-
+    
     template<typename T>
     bool RegisterVar(std::string Name, T value);
 
@@ -56,6 +92,7 @@ public:
         lua_pushinteger(L, value);
         lua_setglobal(L, Name.c_str());
         lua_pop(L, lua_gettop(L));
+        return true;
     };
 
     template<>
@@ -63,6 +100,7 @@ public:
         lua_pushnumber(L, value);
         lua_setglobal(L, Name.c_str());
         lua_pop(L, lua_gettop(L));
+        return true;
     };
 
     template<>
@@ -70,6 +108,7 @@ public:
         lua_pushinteger(L, value);
         lua_setglobal(L, Name.c_str());
         lua_pop(L, lua_gettop(L));
+        return true;
     };
 
     template<>
@@ -77,6 +116,7 @@ public:
         lua_pushnumber(L, value);
         lua_setglobal(L, Name.c_str());
         lua_pop(L, lua_gettop(L));
+        return true;
     };
 
     template<>
@@ -84,6 +124,15 @@ public:
         lua_pushstring(L, value);
         lua_setglobal(L, Name.c_str());
         lua_pop(L, lua_gettop(L));
+        return true;
+    };
+
+    template<>
+    bool RegisterVar(std::string Name, const char* value) {
+        lua_pushstring(L, value);
+        lua_setglobal(L, Name.c_str());
+        lua_pop(L, lua_gettop(L));
+        return true;
     };
 
     template<>
@@ -91,6 +140,7 @@ public:
         lua_pushstring(L, value.c_str());
         lua_setglobal(L, Name.c_str());
         lua_pop(L, lua_gettop(L));
+        return true;
     };
 
     //TODO::
@@ -99,6 +149,7 @@ public:
 
 
         lua_pop(L, lua_gettop(L));
+        return true;
     };
 
     //TODO::
@@ -108,9 +159,8 @@ public:
 
     template<typename T>
     bool SetVar(std::string Name, T val) {
-        RegisterVar<T>(Name, val);
+        return RegisterVar<T>(Name, val);
     };
-
 
     template<typename T>
     T GetVar(std::string Name) {}
@@ -162,7 +212,7 @@ public:
         va_list lst;
         va_start(lst, Name);
         for (int i = 0; i < numArgs; i++) {
-            std::tuple<> arg = va_arg(lst, );
+            int arg = va_arg(lst,int);
             lua_pushnumber(L, arg);
         }
         va_end(lst);
@@ -171,7 +221,8 @@ public:
             int result = lua_tointeger(L, -1);
             lua_pop(L, 1);
             lua_pop(L, lua_gettop(L));
-            return result
+            return result;
         }
+        throw Exception("fuck", "fuck");
     }
 };
