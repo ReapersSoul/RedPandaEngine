@@ -4,6 +4,6 @@
 #include "Scripting_Language.h"
 
 
-class Python :public Scripting_Languge {
+class Python :public Scripting_Language {
 
 };

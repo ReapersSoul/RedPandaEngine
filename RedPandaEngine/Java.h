@@ -2,7 +2,7 @@
 #include "Scripting_Language.h"
 #include <jni.h>
 
-class Java :public Scripting_Languge {
+class Java :public Scripting_Language {
 	JavaVM* jvm;       /* denotes a Java VM */
 	JNIEnv* env;       /* pointer to native method interface */
     JavaVMInitArgs vm_args;                        // Initialization arguments

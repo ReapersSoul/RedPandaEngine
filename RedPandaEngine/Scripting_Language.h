@@ -4,7 +4,7 @@
 #include <stdarg.h>
 #include <tuple>
 
-class Scripting_Languge {
+class Scripting_Language {
 public:
 	enum Type {
 		e_bool, e_double, e_int, e_string, e_voidP, e_Table
