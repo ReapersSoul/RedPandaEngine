@@ -47,6 +47,15 @@ int main()
         lua.RunString("print(Fal)");
         lua.SetVar("Fal", 100);
         lua.RunString("print(Fal-20)");
+
+        int i = lua.GetVar<int>("Fal");
+        std::cout << i << "\n";
+
+        lua.RegisterFunction<double,2>("ADD", [](std::vector<Scripting_Languge::Var> vars) {
+            return std::get<2>(vars[0])+ std::get<2>(vars[1]);
+            });
+
+        lua.RunString("print(ADD(10,200))");
     }
     catch (Scripting_Languge::Exception e) {
         std::cout << e.Id << "\n" << e.Desc << "\n";

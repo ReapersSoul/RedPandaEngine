@@ -6,6 +6,9 @@
 
 class Scripting_Languge {
 public:
+	enum Type {
+		e_bool, e_double, e_int, e_string, e_voidP, e_Table
+	};
 	struct Exception {
 		Exception(std::string DESC, std::string ID="",int nid=0) {
 			Id = ID;
@@ -28,8 +31,8 @@ protected:
 	virtual bool LoadString(std::string str) { return false; };
 	virtual bool RunScript(std::string path) { return false; };
 	virtual bool RunString(std::string str) { return false; };
-	template<typename T>
-	bool RegisterFunction(std::string Name, std::function<T> f) { return false; };
+	template<typename T,int NumArgs>
+	bool RegisterFunction(std::string Name, std::function<T(std::vector<Var>)> f) { return false; };
 	template<typename T>
 	bool RegisterVar(std::string Name, T value) { return false; };
 	template<typename T>
