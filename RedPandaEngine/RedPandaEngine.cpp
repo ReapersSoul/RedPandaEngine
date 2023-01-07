@@ -48,31 +48,42 @@ enum ScriptingConsoleType {
     SCT_NONE
 };
 
+void CoutColor(std::string str, int r=255, int g=255, int b=255) {
+    std::cout<<"\x1b[38;2;"+std::to_string(r) + ";" + std::to_string(g) + ";" + std::to_string(b) + "m" + str + "\x1b[0m";
+}
+void SetColor(int r, int g, int b) {
+    std::cout << "\x1b[38;2;" + std::to_string(r) + ";" + std::to_string(g) + ";" + std::to_string(b) + "m";
+}
+
+void ResetColor() {
+    std::cout << "\x1b[0m";
+}
+
 int main()
 {
-    std::thread windowThread = std::thread([]() {
-        SetCallBackWindow(&wind);
-        wind.Set_Camera_function(Camera);
-        wind.Set_Draw_function(Draw);
-        wind.Set_GUI_function(GUI);
-        wind.Init();
-        wind.AddEventProcessor(&PEH);
+    //std::thread windowThread = std::thread([]() {
+    //    SetCallBackWindow(&wind);
+    //    wind.Set_Camera_function(Camera);
+    //    wind.Set_Draw_function(Draw);
+    //    wind.Set_GUI_function(GUI);
+    //    wind.Init();
+    //    wind.AddEventProcessor(&PEH);
 
-        wind.Loop();
+    //    wind.Loop();
 
-        wind.CleanUp();
-        });
+    //    wind.CleanUp();
+    //    });
     Lua lua;
     lua.Init();
     try {
-        lua.RegisterVar("Fal", "fuck");
-        lua.RunString("print(Fal)");
-        lua.SetVar("Fal", 100);
-        lua.RunString("print(Fal-20)");
+        //setup Language Manager and register languages
 
-        int i = lua.GetVar<int>("Fal");
-        std::cout << i << "\n";
 
+        //register variables in languages
+        lua.RegisterVar("FalStr", "fuck");
+        lua.SetVar("FalNum", 100);
+
+        //register functions in languages
         lua.RegisterFunction<double>("ADD", new std::function<double(std::vector<Scripting_Language::Var>*)>([](std::vector<Scripting_Language::Var>* vars) {
             double one = std::get<1>((*vars)[0]);
             double two = std::get<1>((*vars)[1]);
@@ -84,7 +95,11 @@ int main()
             return one - two;
             }));
 
-        lua.RunString("print(SUB(1000,200))");
+
+        ////run code in languages
+        //lua.RunString("print(SUB(1000,200))");
+        //lua.RunString("print(FalStr)");
+        //lua.RunString("print(FalNum-20)");
 
         //setup Live Terminal
         lua.RunString("_G.Exit=function() _G.___Live_Terminal_Run___=false end");
@@ -100,14 +115,17 @@ int main()
                 {
                     try {
                         std::string s;
+                        CoutColor("LUA: ",242, 237, 86);
                         std::getline(std::cin, s);
+                        SetColor(40, 177, 249);
                         lua.RunString(s);
+                        ResetColor();
                     }
                     catch (Scripting_Language::Exception e) {
                         std::cout << e.Id << "\n" << e.Desc << "\n";
                     }
                 }
-                std::cout << "Lua Live Terminal Exited!!" << std::endl;
+                CoutColor("Lua Live Terminal Exited!!\n", 102, 255, 102);
                 sct = SCT_NONE;
                 break;
             case SCT_JS:
@@ -121,6 +139,14 @@ int main()
             case SCT_NATIVE:
                 break;
             case SCT_NONE:
+                CoutColor("Select Live Console (", 255, 51, 51); 
+                CoutColor("LUA,", 242, 237, 86); 
+                CoutColor(" JS,"); 
+                CoutColor(" JAVA,"); 
+                CoutColor(" CSHARP,"); 
+                CoutColor(" PYTHON,"); 
+                CoutColor(" NATIVE");
+                CoutColor("): ", 255, 51, 51);
                 std::getline(std::cin, tmp);
                 if (tmp == "Exit()") {
                     LiveConsole=false;
@@ -136,5 +162,5 @@ int main()
     catch (Scripting_Language::Exception e) {
         std::cout << e.Id << "\n" << e.Desc << "\n";
     }
-    windowThread.join();
+    //windowThread.join();
 }
