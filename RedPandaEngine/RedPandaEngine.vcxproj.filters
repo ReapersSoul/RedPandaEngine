@@ -36,28 +36,28 @@
     <ClCompile Include="util.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="E:\SDKs\imgui\imgui.cpp">
+    <ClCompile Include="G:\SDKs\imgui\imgui.cpp">
       <Filter>Header Files\IMGUI</Filter>
     </ClCompile>
-    <ClCompile Include="E:\SDKs\imgui\imgui_demo.cpp">
+    <ClCompile Include="G:\SDKs\imgui\imgui_demo.cpp">
       <Filter>Header Files\IMGUI</Filter>
     </ClCompile>
-    <ClCompile Include="E:\SDKs\imgui\imgui_draw.cpp">
+    <ClCompile Include="G:\SDKs\imgui\imgui_draw.cpp">
       <Filter>Header Files\IMGUI</Filter>
     </ClCompile>
-    <ClCompile Include="E:\SDKs\imgui\imgui_tables.cpp">
+    <ClCompile Include="G:\SDKs\imgui\imgui_tables.cpp">
       <Filter>Header Files\IMGUI</Filter>
     </ClCompile>
-    <ClCompile Include="E:\SDKs\imgui\imgui_widgets.cpp">
+    <ClCompile Include="G:\SDKs\imgui\imgui_widgets.cpp">
       <Filter>Header Files\IMGUI</Filter>
     </ClCompile>
-    <ClCompile Include="E:\SDKs\imgui\backends\imgui_impl_glfw.cpp">
+    <ClCompile Include="G:\SDKs\imgui\backends\imgui_impl_glfw.cpp">
       <Filter>Header Files\IMGUI</Filter>
     </ClCompile>
-    <ClCompile Include="E:\SDKs\imgui\backends\imgui_impl_opengl2.cpp">
+    <ClCompile Include="G:\SDKs\imgui\backends\imgui_impl_opengl2.cpp">
       <Filter>Header Files\IMGUI</Filter>
     </ClCompile>
-    <ClCompile Include="E:\SDKs\imgui\backends\imgui_impl_opengl3.cpp">
+    <ClCompile Include="G:\SDKs\imgui\backends\imgui_impl_opengl3.cpp">
       <Filter>Header Files\IMGUI</Filter>
     </ClCompile>
     <ClCompile Include="Graphics.cpp">
@@ -71,34 +71,34 @@
     <ClInclude Include="util.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="E:\SDKs\imgui\imconfig.h">
+    <ClInclude Include="G:\SDKs\imgui\imconfig.h">
       <Filter>Header Files\IMGUI</Filter>
     </ClInclude>
-    <ClInclude Include="E:\SDKs\imgui\imgui.h">
+    <ClInclude Include="G:\SDKs\imgui\imgui.h">
       <Filter>Header Files\IMGUI</Filter>
     </ClInclude>
-    <ClInclude Include="E:\SDKs\imgui\imgui_internal.h">
+    <ClInclude Include="G:\SDKs\imgui\imgui_internal.h">
       <Filter>Header Files\IMGUI</Filter>
     </ClInclude>
-    <ClInclude Include="E:\SDKs\imgui\imstb_rectpack.h">
+    <ClInclude Include="G:\SDKs\imgui\imstb_rectpack.h">
       <Filter>Header Files\IMGUI</Filter>
     </ClInclude>
-    <ClInclude Include="E:\SDKs\imgui\imstb_textedit.h">
+    <ClInclude Include="G:\SDKs\imgui\imstb_textedit.h">
       <Filter>Header Files\IMGUI</Filter>
     </ClInclude>
-    <ClInclude Include="E:\SDKs\imgui\imstb_truetype.h">
+    <ClInclude Include="G:\SDKs\imgui\imstb_truetype.h">
       <Filter>Header Files\IMGUI</Filter>
     </ClInclude>
-    <ClInclude Include="E:\SDKs\imgui\backends\imgui_impl_glfw.h">
+    <ClInclude Include="G:\SDKs\imgui\backends\imgui_impl_glfw.h">
       <Filter>Header Files\IMGUI</Filter>
     </ClInclude>
-    <ClInclude Include="E:\SDKs\imgui\backends\imgui_impl_opengl2.h">
+    <ClInclude Include="G:\SDKs\imgui\backends\imgui_impl_opengl2.h">
       <Filter>Header Files\IMGUI</Filter>
     </ClInclude>
-    <ClInclude Include="E:\SDKs\imgui\backends\imgui_impl_opengl3.h">
+    <ClInclude Include="G:\SDKs\imgui\backends\imgui_impl_opengl3.h">
       <Filter>Header Files\IMGUI</Filter>
     </ClInclude>
-    <ClInclude Include="E:\SDKs\imgui\backends\imgui_impl_opengl3_loader.h">
+    <ClInclude Include="G:\SDKs\imgui\backends\imgui_impl_opengl3_loader.h">
       <Filter>Header Files\IMGUI</Filter>
     </ClInclude>
     <ClInclude Include="Lovense_Device.h">

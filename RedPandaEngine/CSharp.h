@@ -3,7 +3,7 @@
 #include <mono/jit/jit.h>
 #include <mono/metadata/assembly.h>
 
-class CSharp :public Scripting_Languge {
+class CSharp :public Scripting_Language {
     MonoDomain* domain;
     MonoAssembly* assembly;
     bool Init() {

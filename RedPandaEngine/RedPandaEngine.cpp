@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include "Graphics.h"
+#include "Lua.h"
 
 class PrimaryEventHandler :public EventStream::EventProcessor {
 public:
@@ -34,32 +35,132 @@ void Camera(GLFWwindow* wind, int Window_Width, int Window_Height) {
 
 void Draw(GLFWwindow* wind, int Window_Width, int Window_Height) {
     //DRAW CALL
-    Graphics::MeshTools::Shapes::Quad q;
 
-    q.draw();
+}
+
+enum ScriptingConsoleType {
+    SCT_LUA,
+    SCT_JS,
+    SCT_JAVA,
+    SCT_CSHARP,
+    SCT_PYTHON,
+    SCT_NATIVE,
+    SCT_NONE
+};
+
+void CoutColor(std::string str, int r=255, int g=255, int b=255) {
+    std::cout<<"\x1b[38;2;"+std::to_string(r) + ";" + std::to_string(g) + ";" + std::to_string(b) + "m" + str + "\x1b[0m";
+}
+void SetColor(int r, int g, int b) {
+    std::cout << "\x1b[38;2;" + std::to_string(r) + ";" + std::to_string(g) + ";" + std::to_string(b) + "m";
+}
+
+void ResetColor() {
+    std::cout << "\x1b[0m";
 }
 
 int main()
 {
-    SetCallBackWindow(&wind);
-    wind.Set_Camera_function(Camera);
-    wind.Set_Draw_function(Draw);
-    wind.Set_GUI_function(GUI);
-    wind.Init();
-    wind.AddEventProcessor(&PEH);
+    //std::thread windowThread = std::thread([]() {
+    //    SetCallBackWindow(&wind);
+    //    wind.Set_Camera_function(Camera);
+    //    wind.Set_Draw_function(Draw);
+    //    wind.Set_GUI_function(GUI);
+    //    wind.Init();
+    //    wind.AddEventProcessor(&PEH);
 
-    wind.Loop();
+    //    wind.Loop();
 
-    wind.CleanUp();
+    //    wind.CleanUp();
+    //    });
+    Lua lua;
+    lua.Init();
+    try {
+        //setup Language Manager and register languages
+
+
+        //register variables in languages
+        lua.RegisterVar("FalStr", "fuck");
+        lua.SetVar("FalNum", 100);
+
+        //register functions in languages
+        lua.RegisterFunction<double>("ADD", new std::function<double(std::vector<Scripting_Language::Var>*)>([](std::vector<Scripting_Language::Var>* vars) {
+            double one = std::get<1>((*vars)[0]);
+            double two = std::get<1>((*vars)[1]);
+            return one+ two;
+            }));
+        lua.RegisterFunction<double>("SUB", new std::function<double(std::vector<Scripting_Language::Var>*)>([](std::vector<Scripting_Language::Var>* vars) {
+            double one = std::get<1>((*vars)[0]);
+            double two = std::get<1>((*vars)[1]);
+            return one - two;
+            }));
+
+
+        ////run code in languages
+        //lua.RunString("print(SUB(1000,200))");
+        //lua.RunString("print(FalStr)");
+        //lua.RunString("print(FalNum-20)");
+
+        //setup Live Terminal
+        lua.RunString("_G.Exit=function() _G.___Live_Terminal_Run___=false end");
+        lua.SetVar<bool>("___Live_Terminal_Run___", true);
+        ScriptingConsoleType sct=SCT_NONE;
+        bool LiveConsole=true;
+        while (LiveConsole) {
+            std::string tmp;
+            switch (sct)
+            {
+            case SCT_LUA:
+                while (lua.GetVar<bool>("___Live_Terminal_Run___"))
+                {
+                    try {
+                        std::string s;
+                        CoutColor("LUA: ",242, 237, 86);
+                        std::getline(std::cin, s);
+                        SetColor(40, 177, 249);
+                        lua.RunString(s);
+                        ResetColor();
+                    }
+                    catch (Scripting_Language::Exception e) {
+                        std::cout << e.Id << "\n" << e.Desc << "\n";
+                    }
+                }
+                CoutColor("Lua Live Terminal Exited!!\n", 102, 255, 102);
+                sct = SCT_NONE;
+                break;
+            case SCT_JS:
+                break;
+            case SCT_JAVA:
+                break;
+            case SCT_CSHARP:
+                break;
+            case SCT_PYTHON:
+                break;
+            case SCT_NATIVE:
+                break;
+            case SCT_NONE:
+                CoutColor("Select Live Console (", 255, 51, 51); 
+                CoutColor("LUA,", 242, 237, 86); 
+                CoutColor(" JS,"); 
+                CoutColor(" JAVA,"); 
+                CoutColor(" CSHARP,"); 
+                CoutColor(" PYTHON,"); 
+                CoutColor(" NATIVE");
+                CoutColor("): ", 255, 51, 51);
+                std::getline(std::cin, tmp);
+                if (tmp == "Exit()") {
+                    LiveConsole=false;
+                }else if (tmp == "LUA") {
+                    sct = SCT_LUA;
+                }
+                break;
+            default:
+                break;
+            }
+        }
+    }
+    catch (Scripting_Language::Exception e) {
+        std::cout << e.Id << "\n" << e.Desc << "\n";
+    }
+    //windowThread.join();
 }
-
-// Run program: Ctrl + F5 or Debug > Start Without Debugging menu
-// Debug program: F5 or Debug > Start Debugging menu
-
-// Tips for Getting Started: 
-//   1. Use the Solution Explorer window to add/manage files
-//   2. Use the Team Explorer window to connect to source control
-//   3. Use the Output window to see build output and other messages
-//   4. Use the Error List window to view errors
-//   5. Go to Project > Add New Item to create new code files, or Project > Add Existing Item to add existing code files to the project
-//   6. In the future, to open this project again, go to File > Open > Project and select the .sln file

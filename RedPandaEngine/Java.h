@@ -2,12 +2,13 @@
 #include "Scripting_Language.h"
 #include <jni.h>
 
-class Java :public Scripting_Languge {
+class Java :public Scripting_Language {
 	JavaVM* jvm;       /* denotes a Java VM */
 	JNIEnv* env;       /* pointer to native method interface */
     JavaVMInitArgs vm_args;                        // Initialization arguments
     JavaVMOption* options;   // JVM invocation options
     jint rc;
+public:
 	bool Init() {
         options = new JavaVMOption[1];   // JVM invocation options
         options[0].optionString = (char*)"-Djava.class.path=.";   // where to find java .class
@@ -42,11 +43,11 @@ class Java :public Scripting_Languge {
 
     };
     bool RunString(std::string str) {
-        env->
+        //env->;
     };
     template<typename T>
     bool RegisterFunction(std::string Name, std::function<T> f) {
-        env->RegisterNatives
+        //env->RegisterNatives
     }
     template<typename T>
     bool RegisterVar(std::string Name, T value);

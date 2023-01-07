@@ -65,21 +65,21 @@
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="E:\SDKs\PropSheets\Luax64.props" />
-    <Import Project="E:\SDKs\PropSheets\Java.props" />
-    <Import Project="E:\SDKs\PropSheets\CSharp.props" />
-    <Import Project="E:\SDKs\PropSheets\Python.props" />
-    <Import Project="E:\SDKs\PropSheets\IMGUI.props" />
-    <Import Project="E:\SDKs\PropSheets\GLM.props" />
-    <Import Project="E:\SDKs\PropSheets\Glewx64.props" />
-    <Import Project="E:\SDKs\PropSheets\GLFWx64D.props" />
-    <Import Project="E:\SDKs\PropSheets\FreeTypex64D.props" />
-    <Import Project="E:\SDKs\PropSheets\PortAudiox64D.props" />
-    <Import Project="E:\SDKs\PropSheets\Kinectx64D.props" />
-    <Import Project="E:\SDKs\PropSheets\DevILx64.props" />
-    <Import Project="E:\SDKs\PropSheets\LovenseD64.props" />
-    <Import Project="E:\SDKs\PropSheets\PLOG.props" />
-    <Import Project="E:\SDKs\PropSheets\json.props" />
+    <Import Project="G:\SDKs\PropSheets\Luax64.props" />
+    <Import Project="G:\SDKs\PropSheets\Java.props" />
+    <Import Project="G:\SDKs\PropSheets\CSharp.props" />
+    <Import Project="G:\SDKs\PropSheets\Python.props" />
+    <Import Project="G:\SDKs\PropSheets\IMGUI.props" />
+    <Import Project="G:\SDKs\PropSheets\GLM.props" />
+    <Import Project="G:\SDKs\PropSheets\Glewx64.props" />
+    <Import Project="G:\SDKs\PropSheets\GLFWx64D.props" />
+    <Import Project="G:\SDKs\PropSheets\FreeTypex64D.props" />
+    <Import Project="G:\SDKs\PropSheets\PortAudiox64D.props" />
+    <Import Project="G:\SDKs\PropSheets\Kinectx64D.props" />
+    <Import Project="G:\SDKs\PropSheets\DevILx64.props" />
+    <Import Project="G:\SDKs\PropSheets\LovenseD64.props" />
+    <Import Project="G:\SDKs\PropSheets\PLOG.props" />
+    <Import Project="G:\SDKs\PropSheets\json.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -142,14 +142,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="E:\SDKs\imgui\backends\imgui_impl_glfw.cpp" />
-    <ClCompile Include="E:\SDKs\imgui\backends\imgui_impl_opengl2.cpp" />
-    <ClCompile Include="E:\SDKs\imgui\backends\imgui_impl_opengl3.cpp" />
-    <ClCompile Include="E:\SDKs\imgui\imgui.cpp" />
-    <ClCompile Include="E:\SDKs\imgui\imgui_demo.cpp" />
-    <ClCompile Include="E:\SDKs\imgui\imgui_draw.cpp" />
-    <ClCompile Include="E:\SDKs\imgui\imgui_tables.cpp" />
-    <ClCompile Include="E:\SDKs\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="G:\SDKs\imgui\backends\imgui_impl_glfw.cpp" />
+    <ClCompile Include="G:\SDKs\imgui\backends\imgui_impl_opengl2.cpp" />
+    <ClCompile Include="G:\SDKs\imgui\backends\imgui_impl_opengl3.cpp" />
+    <ClCompile Include="G:\SDKs\imgui\imgui.cpp" />
+    <ClCompile Include="G:\SDKs\imgui\imgui_demo.cpp" />
+    <ClCompile Include="G:\SDKs\imgui\imgui_draw.cpp" />
+    <ClCompile Include="G:\SDKs\imgui\imgui_tables.cpp" />
+    <ClCompile Include="G:\SDKs\imgui\imgui_widgets.cpp" />
     <ClCompile Include="Graphics.cpp" />
     <ClCompile Include="RedPandaEngine.cpp" />
     <ClCompile Include="TextRenderer.cpp" />
@@ -158,16 +158,16 @@
   <ItemGroup>
     <ClInclude Include="CSharp.h" />
     <ClInclude Include="DEVICE.h" />
-    <ClInclude Include="E:\SDKs\imgui\backends\imgui_impl_glfw.h" />
-    <ClInclude Include="E:\SDKs\imgui\backends\imgui_impl_opengl2.h" />
-    <ClInclude Include="E:\SDKs\imgui\backends\imgui_impl_opengl3.h" />
-    <ClInclude Include="E:\SDKs\imgui\backends\imgui_impl_opengl3_loader.h" />
-    <ClInclude Include="E:\SDKs\imgui\imconfig.h" />
-    <ClInclude Include="E:\SDKs\imgui\imgui.h" />
-    <ClInclude Include="E:\SDKs\imgui\imgui_internal.h" />
-    <ClInclude Include="E:\SDKs\imgui\imstb_rectpack.h" />
-    <ClInclude Include="E:\SDKs\imgui\imstb_textedit.h" />
-    <ClInclude Include="E:\SDKs\imgui\imstb_truetype.h" />
+    <ClInclude Include="G:\SDKs\imgui\backends\imgui_impl_glfw.h" />
+    <ClInclude Include="G:\SDKs\imgui\backends\imgui_impl_opengl2.h" />
+    <ClInclude Include="G:\SDKs\imgui\backends\imgui_impl_opengl3.h" />
+    <ClInclude Include="G:\SDKs\imgui\backends\imgui_impl_opengl3_loader.h" />
+    <ClInclude Include="G:\SDKs\imgui\imconfig.h" />
+    <ClInclude Include="G:\SDKs\imgui\imgui.h" />
+    <ClInclude Include="G:\SDKs\imgui\imgui_internal.h" />
+    <ClInclude Include="G:\SDKs\imgui\imstb_rectpack.h" />
+    <ClInclude Include="G:\SDKs\imgui\imstb_textedit.h" />
+    <ClInclude Include="G:\SDKs\imgui\imstb_truetype.h" />
     <ClInclude Include="Graphics.h" />
     <ClInclude Include="Java.h" />
     <ClInclude Include="Kinect.h" />
