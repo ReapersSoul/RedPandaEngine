@@ -3,6 +3,7 @@
 #include <functional>
 #include <stdarg.h>
 #include <tuple>
+#include <map>
 
 class Scripting_Language {
 public:
@@ -24,15 +25,14 @@ public:
 	class Table {
 		std::map<std::string, Var> data;
 	};
-protected:
 	virtual bool Init() { return false; };
 	virtual bool Deconstruct() { return false; };
 	virtual bool LoadScript(std::string path) { return false; };
 	virtual bool LoadString(std::string str) { return false; };
 	virtual bool RunScript(std::string path) { return false; };
 	virtual bool RunString(std::string str) { return false; };
-	template<typename T,int NumArgs>
-	bool RegisterFunction(std::string Name, std::function<T(std::vector<Var>)> f) { return false; };
+	template<typename T>
+	bool RegisterFunction(std::string Name, std::function<T(std::vector<Var>*)>* f) { return false; };
 	template<typename T>
 	bool RegisterVar(std::string Name, T value) { return false; };
 	template<typename T>
@@ -41,6 +41,6 @@ protected:
 	bool SetVar(std::string Name, T val) { return false; };
 	template<typename T>
 	T GetVar(std::string Name) { return false; };
-	template<typename T>
+	template<typename T, int numArgs>
 	T CallFunction(std::string Name, ...) { return false; };
 };

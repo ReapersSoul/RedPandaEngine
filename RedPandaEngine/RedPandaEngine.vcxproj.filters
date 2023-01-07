@@ -137,5 +137,8 @@
     <ClInclude Include="Native.h">
       <Filter>Header Files\Scripting Languages</Filter>
     </ClInclude>
+    <ClInclude Include="Scripting_Language_Manager.h">
+      <Filter>Header Files\Scripting Languages</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

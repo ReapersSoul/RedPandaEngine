@@ -177,6 +177,7 @@
     <ClInclude Include="Native.h" />
     <ClInclude Include="Physics.h" />
     <ClInclude Include="Python.h" />
+    <ClInclude Include="Scripting_Language_Manager.h" />
     <ClInclude Include="Scripting_Language.h" />
     <ClInclude Include="TextRenderer.hpp" />
     <ClInclude Include="util.h" />

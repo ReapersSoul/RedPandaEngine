@@ -4,6 +4,7 @@
 #include <iostream>
 #include "Graphics.h"
 #include "Lua.h"
+#include "Scripting_Language_Manager.h"
 
 class PrimaryEventHandler :public EventStream::EventProcessor {
 public:
@@ -73,23 +74,25 @@ int main()
 
     //    wind.CleanUp();
     //    });
+    Scripting_Language_Manager SLM;
     Lua lua;
+    SLM.RegisterLanguage(&lua);
     lua.Init();
     try {
         //setup Language Manager and register languages
 
 
         //register variables in languages
-        lua.RegisterVar("FalStr", "fuck");
-        lua.SetVar("FalNum", 100);
+        SLM.RegisterVar("FalStr", "fuck");
+        SLM.SetVar("FalNum", 100);
 
         //register functions in languages
-        lua.RegisterFunction<double>("ADD", new std::function<double(std::vector<Scripting_Language::Var>*)>([](std::vector<Scripting_Language::Var>* vars) {
+        SLM.RegisterFunction<double>("ADD", new std::function<double(std::vector<Scripting_Language::Var>*)>([](std::vector<Scripting_Language::Var>* vars) {
             double one = std::get<1>((*vars)[0]);
             double two = std::get<1>((*vars)[1]);
             return one+ two;
             }));
-        lua.RegisterFunction<double>("SUB", new std::function<double(std::vector<Scripting_Language::Var>*)>([](std::vector<Scripting_Language::Var>* vars) {
+        SLM.RegisterFunction<double>("SUB", new std::function<double(std::vector<Scripting_Language::Var>*)>([](std::vector<Scripting_Language::Var>* vars) {
             double one = std::get<1>((*vars)[0]);
             double two = std::get<1>((*vars)[1]);
             return one - two;

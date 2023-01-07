@@ -1,0 +1,136 @@
+{
+  "main": {
+    "id": "464dc3fc3e717169",
+    "type": "split",
+    "children": [
+      {
+        "id": "09859a6eaabb9665",
+        "type": "leaf",
+        "state": {
+          "type": "markdown",
+          "state": {
+            "file": "Scripting Languages/Scripting Languages.md",
+            "mode": "source",
+            "source": false
+          }
+        }
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "e834993f1ac690cb",
+    "type": "split",
+    "children": [
+      {
+        "id": "39be9b783ad99f9a",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "1fa1bd3b79b49076",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {}
+            }
+          },
+          {
+            "id": "41fac142f5f27003",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              }
+            }
+          },
+          {
+            "id": "d6295f154f7b2ba3",
+            "type": "leaf",
+            "state": {
+              "type": "starred",
+              "state": {}
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "d02593ab53e1e3b8",
+    "type": "split",
+    "children": [
+      {
+        "id": "b6be89e4191c286b",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "cbde31ea8cbfde2c",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "Scripting Languages/Scripting Languages.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              }
+            }
+          },
+          {
+            "id": "5bd0b7d6b21486cb",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "Scripting Languages/Scripting Languages.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              }
+            }
+          },
+          {
+            "id": "8c88ea9671ceb3e1",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true
+              }
+            }
+          },
+          {
+            "id": "ebd2e5ad7b849a8f",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "Scripting Languages/Scripting Languages.md"
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "active": "09859a6eaabb9665",
+  "lastOpenFiles": [
+    "Scripting Languages/Scripting Languages.md",
+    "Documentation/The Redpanda Engine.md"
+  ]
+}
