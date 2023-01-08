@@ -66,9 +66,9 @@
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="G:\SDKs\PropSheets\Luax64.props" />
+    <Import Project="..\..\SDKs\PropSheets\Pythonx64D.props" />
     <Import Project="G:\SDKs\PropSheets\Java.props" />
     <Import Project="G:\SDKs\PropSheets\CSharp.props" />
-    <Import Project="G:\SDKs\PropSheets\Python.props" />
     <Import Project="G:\SDKs\PropSheets\IMGUI.props" />
     <Import Project="G:\SDKs\PropSheets\GLM.props" />
     <Import Project="G:\SDKs\PropSheets\Glewx64.props" />

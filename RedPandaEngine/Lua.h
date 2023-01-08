@@ -171,68 +171,55 @@ public:
 		return false;
 	}
 
-	template<typename T>
-	bool RegisterVar(std::string Name, T value);
-
-	template<>
-	bool RegisterVar(std::string Name, bool value) {
+	bool SetVar(std::string Name, bool value) {
 		lua_pushinteger(L, value);
 		lua_setglobal(L, Name.c_str());
 		lua_pop(L, lua_gettop(L));
 		return true;
 	};
 
-	template<>
-	bool RegisterVar(std::string Name, double value) {
+	bool SetVar(std::string Name, double value) {
 		lua_pushnumber(L, value);
 		lua_setglobal(L, Name.c_str());
 		lua_pop(L, lua_gettop(L));
 		return true;
 	};
 
-	template<>
-	bool RegisterVar(std::string Name, int value) {
+	bool SetVar(std::string Name, int value) {
 		lua_pushinteger(L, value);
 		lua_setglobal(L, Name.c_str());
 		lua_pop(L, lua_gettop(L));
 		return true;
 	};
 
-	template<>
-	bool RegisterVar(std::string Name, float value) {
+	bool SetVar(std::string Name, float value) {
 		lua_pushnumber(L, value);
 		lua_setglobal(L, Name.c_str());
 		lua_pop(L, lua_gettop(L));
 		return true;
 	};
-
-	template<>
-	bool RegisterVar(std::string Name, char* value) {
+	bool SetVar(std::string Name, char* value) {
 		lua_pushstring(L, value);
 		lua_setglobal(L, Name.c_str());
 		lua_pop(L, lua_gettop(L));
 		return true;
 	};
 
-	template<>
-	bool RegisterVar(std::string Name, const char* value) {
+	bool SetVar(std::string Name, const char* value) {
 		lua_pushstring(L, value);
 		lua_setglobal(L, Name.c_str());
 		lua_pop(L, lua_gettop(L));
 		return true;
 	};
 
-	template<>
-	bool RegisterVar(std::string Name, std::string value) {
+	bool SetVar(std::string Name, std::string value) {
 		lua_pushstring(L, value.c_str());
 		lua_setglobal(L, Name.c_str());
 		lua_pop(L, lua_gettop(L));
 		return true;
 	};
-
 	//TODO::
-	template<>
-	bool RegisterVar(std::string Name, Table value) {
+	bool SetVar(std::string Name, Table value) {
 
 
 		lua_pop(L, lua_gettop(L));
@@ -240,53 +227,40 @@ public:
 	};
 
 	//TODO::
-	template<typename T>
-	bool RegisterLinkedVar(std::string Name, T* value);
+	//bool RegisterLinkedVar(std::string Name, * value);
 
-
-	template<typename T>
-	bool SetVar(std::string Name, T val) {
-		return RegisterVar<T>(Name, val);
-	};
-
-	template<typename T>
-	T GetVar(std::string Name) {}
-
-	template<>
-	std::string GetVar(std::string Name)
-	{
-		lua_getglobal(L, Name.c_str());
-		std::string message = lua_tostring(L, -1);
-		lua_pop(L, 1);
-		return message;
-	}
-
-	template<>
-	int GetVar(std::string Name)
-	{
-		lua_getglobal(L, Name.c_str());
-		int message = lua_tointeger(L, -1);
-		lua_pop(L, 1);
-		return message;
-	}
-
-	template<>
-	double GetVar(std::string Name)
-	{
-		lua_getglobal(L, Name.c_str());
-		double message = lua_tonumber(L, -1);
-		lua_pop(L, 1);
-		return message;
-	}
-
-	template<>
-	bool GetVar(std::string Name)
+	bool GetVarAsBool(std::string Name)
 	{
 		lua_getglobal(L, Name.c_str());
 		bool message = lua_toboolean(L, -1);
 		lua_pop(L, 1);
 		return message;
 	}
+	int GetVarAsInt(std::string Name)
+	{
+		lua_getglobal(L, Name.c_str());
+		int message = lua_tointeger(L, -1);
+		lua_pop(L, 1);
+		return message;
+	}
+	float GetVarAsFloat(std::string Name)
+	{
+		lua_getglobal(L, Name.c_str());
+		double message = lua_tonumber(L, -1);
+		lua_pop(L, 1);
+		return message;
+	}
+	std::string GetVarAsString(std::string Name)
+	{
+		lua_getglobal(L, Name.c_str());
+		std::string message = lua_tostring(L, -1);
+		lua_pop(L, 1);
+		return message;
+	}
+	double GetVarAsDouble(std::string Name) { return false; };
+	char* GetVarAsCharP(std::string Name) { return (char*)""; };
+	const char* GetVarAsConstCharP(std::string Name) { return ""; };
+	Table GetVarAsTable(std::string Name) { return Table(); };
 
 
 	template<typename T, int numArgs>
