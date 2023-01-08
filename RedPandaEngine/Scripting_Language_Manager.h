@@ -32,50 +32,38 @@ public:
 
 
 
-	//TODO::
+	////TODO::
+	//template<typename T>
+	//bool RegisterFunction(std::string Name, std::function<T(std::vector<Var>*)>* f) {
+	//	for (int i = 0; i < langs.size(); i++)
+	//	{
+	//		if (!langs[i]->RegisterFunction<T>(Name, f)) {
+	//			return false;
+	//		}
+	//	}
+	//	return true;
+	//}
+
 	template<typename T>
-	bool RegisterFunction(std::string Name, std::function<T(std::vector<Var>*)>* f) {
+	bool SetVar(std::string Name, T value) {
 		for (int i = 0; i < langs.size(); i++)
 		{
-			if (!langs[i]->RegisterFunction<T>(Name, f)) {
+			if (!langs[i]->SetVar(Name, value)) {
 				return false;
 			}
 		}
 		return true;
 	}
 
-	template<typename T>
-	bool RegisterVar(std::string Name, T value) {
-		for (int i = 0; i < langs.size(); i++)
-		{
-			if (!langs[i]->RegisterVar<T>(Name, value)) {
-				return false;
-			}
-		}
-		return true;
-	}
-
-	//TODO::
-	template<typename T>
-	bool RegisterLinkedVar(std::string Name, T* value) {
-		for (int i = 0; i < langs.size(); i++)
-		{
-			if (!langs[i]->RegisterLinkedVar<T>(Name, value)) {
-				return false;
-			}
-		}
-		return true;
-	}
-
-
-	template<typename T>
-	bool SetVar(std::string Name, T val) {
-		for (int i = 0; i < langs.size(); i++)
-		{
-			if (!langs[i]->SetVar<T>(Name, val)) {
-				return false;
-			}
-		}
-		return true;
-	};
+	////TODO::
+	//template<typename T>
+	//bool RegisterLinkedVar(std::string Name, T* value) {
+	//	for (int i = 0; i < langs.size(); i++)
+	//	{
+	//		if (!langs[i]->RegisterLinkedVar<T>(Name, value)) {
+	//			return false;
+	//		}
+	//	}
+	//	return true;
+	//}
 };

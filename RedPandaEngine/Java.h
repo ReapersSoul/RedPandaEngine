@@ -50,7 +50,7 @@ public:
         //env->RegisterNatives
     }
     template<typename T>
-    bool RegisterVar(std::string Name, T value);
+    bool SetVar(std::string Name, T value);
     template<typename T>
     bool RegisterLinkedVar(std::string Name, T* value);
     template<typename T>

@@ -4,6 +4,7 @@
 #include <iostream>
 #include "Graphics.h"
 #include "Lua.h"
+#include "Python.h"
 #include "Scripting_Language_Manager.h"
 
 class PrimaryEventHandler :public EventStream::EventProcessor {
@@ -77,26 +78,30 @@ int main()
     Scripting_Language_Manager SLM;
     Lua lua;
     SLM.RegisterLanguage(&lua);
-    lua.Init();
+    Python python;
+    SLM.RegisterLanguage(&python);
+
+    SLM.Init();
     try {
         //setup Language Manager and register languages
 
 
         //register variables in languages
-        SLM.RegisterVar("FalStr", "fuck");
-        SLM.SetVar("FalNum", 100);
+        //SLM.SetVar("FalStr", "fuck");
+        //SLM.SetVar("FalNum", 100);
+        SLM.SetVar("___Live_Terminal_Run___", true);
 
         //register functions in languages
-        SLM.RegisterFunction<double>("ADD", new std::function<double(std::vector<Scripting_Language::Var>*)>([](std::vector<Scripting_Language::Var>* vars) {
-            double one = std::get<1>((*vars)[0]);
-            double two = std::get<1>((*vars)[1]);
-            return one+ two;
-            }));
-        SLM.RegisterFunction<double>("SUB", new std::function<double(std::vector<Scripting_Language::Var>*)>([](std::vector<Scripting_Language::Var>* vars) {
-            double one = std::get<1>((*vars)[0]);
-            double two = std::get<1>((*vars)[1]);
-            return one - two;
-            }));
+        //SLM.RegisterFunction<double>("ADD", new std::function<double(std::vector<Scripting_Language::Var>*)>([](std::vector<Scripting_Language::Var>* vars) {
+        //    double one = std::get<1>((*vars)[0]);
+        //    double two = std::get<1>((*vars)[1]);
+        //    return one+ two;
+        //    }));
+        //SLM.RegisterFunction<double>("SUB", new std::function<double(std::vector<Scripting_Language::Var>*)>([](std::vector<Scripting_Language::Var>* vars) {
+        //    double one = std::get<1>((*vars)[0]);
+        //    double two = std::get<1>((*vars)[1]);
+        //    return one - two;
+        //    }));
 
 
         ////run code in languages
@@ -106,7 +111,6 @@ int main()
 
         //setup Live Terminal
         lua.RunString("_G.Exit=function() _G.___Live_Terminal_Run___=false end");
-        lua.SetVar<bool>("___Live_Terminal_Run___", true);
         ScriptingConsoleType sct=SCT_NONE;
         bool LiveConsole=true;
         while (LiveConsole) {
@@ -114,7 +118,7 @@ int main()
             switch (sct)
             {
             case SCT_LUA:
-                while (lua.GetVar<bool>("___Live_Terminal_Run___"))
+                while (lua.GetVarAsBool("___Live_Terminal_Run___"))
                 {
                     try {
                         std::string s;
@@ -138,6 +142,22 @@ int main()
             case SCT_CSHARP:
                 break;
             case SCT_PYTHON:
+                while (python.GetVarAsBool("___Live_Terminal_Run___"))
+                {
+                    try {
+                        std::string s;
+                        CoutColor("LUA: ", 0, 102, 204);
+                        std::getline(std::cin, s);
+                        SetColor(255, 255, 102);
+                        lua.RunString(s);
+                        ResetColor();
+                    }
+                    catch (Scripting_Language::Exception e) {
+                        std::cout << e.Id << "\n" << e.Desc << "\n";
+                    }
+                }
+                CoutColor("Lua Live Terminal Exited!!\n", 102, 255, 102);
+                sct = SCT_NONE;
                 break;
             case SCT_NATIVE:
                 break;
@@ -147,7 +167,7 @@ int main()
                 CoutColor(" JS,"); 
                 CoutColor(" JAVA,"); 
                 CoutColor(" CSHARP,"); 
-                CoutColor(" PYTHON,"); 
+                CoutColor(" PYTHON,",0,102,204); 
                 CoutColor(" NATIVE");
                 CoutColor("): ", 255, 51, 51);
                 std::getline(std::cin, tmp);
@@ -155,6 +175,9 @@ int main()
                     LiveConsole=false;
                 }else if (tmp == "LUA") {
                     sct = SCT_LUA;
+                }
+                else if (tmp == "PYTHON") {
+                    sct = SCT_PYTHON;
                 }
                 break;
             default:
