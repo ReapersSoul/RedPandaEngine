@@ -84,10 +84,10 @@ public:
 
 	bool SetVar(std::string Name, bool value) {
 		PyObject* i_obj;
-		pytuppl
-		i_obj = Py_BuildValue(Name.c_str(), value);
-		PyDict_SetItemString(main_dict, Name.c_str(), i_obj);
-		Py_XDECREF(i_obj);
+		//pytuppl
+		//i_obj = Py_BuildValue(Name.c_str(), value);
+		//PyDict_SetItemString(main_dict, Name.c_str(), i_obj);
+		//Py_XDECREF(i_obj);
 		return true;
 	};
 	bool SetVar(std::string Name, double value) {
