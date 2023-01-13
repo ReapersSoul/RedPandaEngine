@@ -82,33 +82,28 @@ public:
 	//	return false;
 	//}
 
-	bool SetVar(std::string Name, bool value) {
-		PyObject* i_obj;
-		//pytuppl
-		//i_obj = Py_BuildValue(Name.c_str(), value);
-		//PyDict_SetItemString(main_dict, Name.c_str(), i_obj);
-		//Py_XDECREF(i_obj);
+	bool SetVar(std::string Name, bool x) {
+		PyObject* value = PyLong_FromDouble(x);
+		int i=PyDict_SetItemString(main_dict, Name.c_str(), value);
+		Py_DECREF(value);
 		return true;
 	};
-	bool SetVar(std::string Name, double value) {
-		PyObject * i_obj;
-		i_obj = Py_BuildValue(Name.c_str(),value);
-		PyDict_SetItemString(main_dict, Name.c_str(), i_obj);
-		Py_XDECREF(i_obj);
+	bool SetVar(std::string Name, double x) {
+		PyObject* value = PyLong_FromDouble(x);
+		PyDict_SetItemString(main_dict, Name.c_str(), value);
+		Py_DECREF(value);
 		return true;
 	};
-	bool SetVar(std::string Name, int value) {
-		PyObject* i_obj;
-		i_obj = Py_BuildValue(Name.c_str(), value);
-		PyDict_SetItemString(main_dict, Name.c_str(), i_obj);
-		Py_XDECREF(i_obj);
+	bool SetVar(std::string Name, int x) {
+		PyObject* value = PyLong_FromDouble(x);
+		PyDict_SetItemString(main_dict, Name.c_str(), value);
+		Py_DECREF(value);
 		return true;
 	};
-	bool SetVar(std::string Name, float value) {
-		PyObject* i_obj;
-		i_obj = Py_BuildValue(Name.c_str(), value);
-		PyDict_SetItemString(main_dict, Name.c_str(), i_obj);
-		Py_XDECREF(i_obj);
+	bool SetVar(std::string Name, float x) {
+		PyObject* value = PyLong_FromDouble(x);
+		PyDict_SetItemString(main_dict, Name.c_str(), value);
+		Py_DECREF(value);
 		return true;
 	};
 	bool SetVar(std::string Name, char* value) {
@@ -146,7 +141,7 @@ public:
 
 	std::string GetVarAsString(std::string Name)
 	{
-		PyObject* v = PyObject_GetAttrString(main_dict, Name.c_str());
+		PyObject* v = PyDict_GetItemString(main_dict, Name.c_str());
 		std::string ret = _PyUnicode_AsString(v);
 		Py_DECREF(v);
 		return ret;
@@ -155,7 +150,7 @@ public:
 	int GetVarAsInt(std::string Name)
 	{
 		/* Extract the resultant variable, k */
-		PyObject* k_obj = PyMapping_GetItemString(main_dict, Name.c_str());
+		PyObject* k_obj = PyDict_GetItemString(main_dict, Name.c_str());
 		int k = _PyLong_AsInt(k_obj);
 		Py_XDECREF(k_obj);
 		return k;
@@ -163,7 +158,7 @@ public:
 
 	double GetVarAsDouble(std::string Name)
 	{
-		PyObject* v = PyObject_GetAttrString(main_dict, Name.c_str());
+		PyObject* v = PyDict_GetItemString(main_dict, Name.c_str());
 		int ret = PyLong_AsDouble(v);
 		Py_DECREF(v);
 		return ret;
@@ -171,7 +166,7 @@ public:
 
 	bool GetVarAsBool(std::string Name)
 	{
-		PyObject* v = PyObject_GetAttrString(main_dict, Name.c_str());
+		PyObject* v = PyDict_GetItemString(main_dict, Name.c_str());
 		bool ret = PyObject_IsTrue(v);
 		Py_DECREF(v);
 		return ret;

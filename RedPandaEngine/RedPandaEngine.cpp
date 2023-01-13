@@ -28,6 +28,22 @@ PrimaryEventHandler PEH;
 //draw functions
 void GUI(GLFWwindow* wind, int Window_Width, int Window_Height) {
     //GUI HERE
+    if (ImGui::BeginMainMenuBar()) {
+        if (ImGui::BeginMenu("File")) {
+            if (ImGui::MenuItem("Save")) {
+                std::exit(0);
+            }
+            if (ImGui::MenuItem("Load")) {
+                std::exit(0);
+            }
+            if (ImGui::MenuItem("Exit")) {
+                std::exit(0);
+            }
+            ImGui::EndMenu();
+        }
+        ImGui::EndMainMenuBar();
+    }
+
     
 }
 
@@ -63,18 +79,18 @@ void ResetColor() {
 
 int main()
 {
-    //std::thread windowThread = std::thread([]() {
-    //    SetCallBackWindow(&wind);
-    //    wind.Set_Camera_function(Camera);
-    //    wind.Set_Draw_function(Draw);
-    //    wind.Set_GUI_function(GUI);
-    //    wind.Init();
-    //    wind.AddEventProcessor(&PEH);
+    std::thread windowThread = std::thread([]() {
+        SetCallBackWindow(&wind);
+        wind.Set_Camera_function(Camera);
+        wind.Set_Draw_function(Draw);
+        wind.Set_GUI_function(GUI);
+        wind.Init();
+        wind.AddEventProcessor(&PEH);
 
-    //    wind.Loop();
+        wind.Loop();
 
-    //    wind.CleanUp();
-    //    });
+        wind.CleanUp();
+        });
     Scripting_Language_Manager SLM;
     Lua lua;
     SLM.RegisterLanguage(&lua);
@@ -89,7 +105,7 @@ int main()
         //register variables in languages
         //SLM.SetVar("FalStr", "fuck");
         //SLM.SetVar("FalNum", 100);
-        SLM.SetVar("___Live_Terminal_Run___", true);
+        SLM.SetVar("LiveTerminalRun", true);
 
         //register functions in languages
         //SLM.RegisterFunction<double>("ADD", new std::function<double(std::vector<Scripting_Language::Var>*)>([](std::vector<Scripting_Language::Var>* vars) {
@@ -110,7 +126,7 @@ int main()
         //lua.RunString("print(FalNum-20)");
 
         //setup Live Terminal
-        lua.RunString("_G.Exit=function() _G.___Live_Terminal_Run___=false end");
+        lua.RunString("_G.Exit=function() _G.LiveTerminalRun=false end");
         ScriptingConsoleType sct=SCT_NONE;
         bool LiveConsole=true;
         while (LiveConsole) {
@@ -118,7 +134,7 @@ int main()
             switch (sct)
             {
             case SCT_LUA:
-                while (lua.GetVarAsBool("___Live_Terminal_Run___"))
+                while (lua.GetVarAsBool("LiveTerminalRun"))
                 {
                     try {
                         std::string s;
@@ -142,11 +158,11 @@ int main()
             case SCT_CSHARP:
                 break;
             case SCT_PYTHON:
-                while (python.GetVarAsBool("___Live_Terminal_Run___"))
+                while (python.GetVarAsBool("LiveTerminalRun"))
                 {
                     try {
                         std::string s;
-                        CoutColor("LUA: ", 0, 102, 204);
+                        CoutColor("PYTHON: ", 0, 102, 204);
                         std::getline(std::cin, s);
                         SetColor(255, 255, 102);
                         lua.RunString(s);
@@ -188,5 +204,5 @@ int main()
     catch (Scripting_Language::Exception e) {
         std::cout << e.Id << "\n" << e.Desc << "\n";
     }
-    //windowThread.join();
+    windowThread.join();
 }
