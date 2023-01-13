@@ -127,6 +127,8 @@ int main()
 
         //setup Live Terminal
         lua.RunString("_G.Exit=function() _G.LiveTerminalRun=false end");
+        python.RunString("def Exit():\n\tglobal LiveTerminalRun\n\tLiveTerminalRun=False\n\treturn;");
+
         ScriptingConsoleType sct=SCT_NONE;
         bool LiveConsole=true;
         while (LiveConsole) {
@@ -165,14 +167,14 @@ int main()
                         CoutColor("PYTHON: ", 0, 102, 204);
                         std::getline(std::cin, s);
                         SetColor(255, 255, 102);
-                        lua.RunString(s);
+                        python.RunString(s);
                         ResetColor();
                     }
                     catch (Scripting_Language::Exception e) {
                         std::cout << e.Id << "\n" << e.Desc << "\n";
                     }
                 }
-                CoutColor("Lua Live Terminal Exited!!\n", 102, 255, 102);
+                CoutColor("Python Live Terminal Exited!!\n", 102, 255, 102);
                 sct = SCT_NONE;
                 break;
             case SCT_NATIVE:
