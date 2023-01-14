@@ -61,11 +61,39 @@ public:
 	};
 
 	//TODO::
-	//bool RegisterFunction(std::string Name, std::function<double(std::vector<Var>*)>* f)
-	//{
+	bool RegisterFunction(std::string Name, std::function<double(std::vector<Var>*)>* f)
+	{
+	//	static PyMethodDef SpamMethods[] = {
+	//{"system",  		[](PyObject* self, PyObject* args)-> PyObject*
+	//	{
+	//		const char* command;
+	//		int sts;
 
-	//	return false;
-	//}
+	//		if (!PyArg_ParseTuple(args, "s", &command))
+	//			return NULL;
+	//		sts = system(command);
+	//		return PyLong_FromLong(sts);
+	//	}, METH_VARARGS,
+	// "Execute a shell command."},
+	//{NULL, NULL, 0, NULL}        /* Sentinel */
+	//	};
+
+	//	struct PyModuleDef spammodule = {
+	//PyModuleDef_HEAD_INIT,
+	//"__main__",   /* name of module */
+	//NULL, /* module documentation, may be NULL */
+	//-1,       /* size of per-interpreter state of the module,
+	//			 or -1 if the module keeps state in global variables. */
+	//SpamMethods
+	//	};
+
+	//	PyMODINIT_FUNC PyInit_spam(void)
+	//	{
+	//		return PyModule_Create(&spammodule);
+	//	}
+
+		return false;
+	}
 	//bool RegisterFunction(std::string Name, std::function<int(std::vector<Var>*)>* f)
 	//{
 
