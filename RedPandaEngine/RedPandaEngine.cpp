@@ -127,7 +127,10 @@ int main()
 {
     int i[] = { 8, 10 };
 
-    CallFunction(1, (void*)i, (void*)printx);
+    printf("%d\n", *i);
+    printf("%d\n", *(i+1));
+
+    CallFunction(1, (void*)printx, (void**)&i);
 
     toyManager = GetLovenseToyManager();
     toyManager->SetDeveloperToken("SCfh7CamO5irTBgvB53z2hdAYjmq2SJLiUNFLrB1SvOQu9hyemQL5lUimQZTeIqT");

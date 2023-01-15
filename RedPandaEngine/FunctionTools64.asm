@@ -10,16 +10,23 @@ PushArg PROC
 	ret
 PushArg ENDP
 
+
+
 CallFunction PROC
 	pop r15
 	mov NumArgs,rcx
-	mov ArgPointer,rdx
-	mov rdx,QWORD PTR[ArgPointer]
-	mov rdx,QWORD PTR[rdx]
-	mov ArgPointer,rdx
-	mov FunctPointer,r8
-	mov rcx,QWORD PTR[ArgPointer]
-	mov rdx, QWORD PTR[ArgPointer-16]
+	mov ArgPointer,r8
+	mov FunctPointer,rdx
+
+loopArgs:
+
+	mov rcx, QWORD PTR[ArgPointer]
+	add ArgPointer,1
+	mov rdx, QWORD PTR[ArgPointer]
+
+	mov rcx, QWORD PTR[rcx]
+	mov rdx, QWORD PTR[rdx]
+
 	call FunctPointer
 	push r15
 	ret
