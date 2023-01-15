@@ -64,11 +64,11 @@ public:
 				Var v;
 				if (lua_isboolean(L, i + 1)) {
 					bool b = lua_toboolean(L, i + 1);
-					PushArg(&b);
+					//PushArg(&b);
 				}
 				else if (lua_isnumber(L, i + 1)) {
 					double d = lua_tonumber(L, i + 1);
-					PushArg(&d);
+					//PushArg(&d);
 				}
 				vars.push_back(v);
 			}

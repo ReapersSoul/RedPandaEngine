@@ -1,5 +1,3 @@
 #pragma once
 #include <windows.h>
-extern "C" void __fastcall PushArg(void* arg);
-
-extern "C" void* __fastcall CallFunction(void* function);
+extern "C" void* __fastcall CallFunction(int args,void * vars, void* function);

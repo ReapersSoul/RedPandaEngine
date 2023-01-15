@@ -119,14 +119,15 @@ class lovenseHandler:public ILovenseSDKNotify {
     };
 };
 
-void printx(int x) {
-    printf("%d\n", x);
+void printx(int x,int l) {
+    printf("%d %d\n", x,l);
 }
 
 int main()
 {
-    PushArg((void*)8);
-    CallFunction((void*)printx);
+    int i[] = { 8, 10 };
+
+    CallFunction(1, (void*)i, (void*)printx);
 
     toyManager = GetLovenseToyManager();
     toyManager->SetDeveloperToken("SCfh7CamO5irTBgvB53z2hdAYjmq2SJLiUNFLrB1SvOQu9hyemQL5lUimQZTeIqT");
