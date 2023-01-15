@@ -1,3 +1,3 @@
 #pragma once
 #include <windows.h>
-extern "C" void* __fastcall CallFunction(int args,void * vars, void* function);
+extern "C" void* __fastcall CallFunction(int NumArgs,void * Args, void* Function);

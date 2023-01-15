@@ -14,10 +14,12 @@ CallFunction PROC
 	pop r15
 	mov NumArgs,rcx
 	mov ArgPointer,rdx
+	mov rdx,QWORD PTR[ArgPointer]
+	mov rdx,QWORD PTR[rdx]
+	mov ArgPointer,rdx
 	mov FunctPointer,r8
 	mov rcx,QWORD PTR[ArgPointer]
-	mov rdx, QWORD PTR[rcx-8]
-	mov rcx, QWORD PTR[rcx]
+	mov rdx, QWORD PTR[ArgPointer-16]
 	call FunctPointer
 	push r15
 	ret
