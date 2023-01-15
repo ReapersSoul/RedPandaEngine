@@ -119,18 +119,17 @@ class lovenseHandler:public ILovenseSDKNotify {
     };
 };
 
-void printx(int x,int l) {
-    printf("%d %d\n", x,l);
+void printx(int x,int l,int j,int g) {
+    printf("%d %d %d %d\n", x,l,j,g);
 }
 
 int main()
 {
-    int i[] = { 8, 10 };
-
-    printf("%d\n", *i);
-    printf("%d\n", *(i+1));
-
-    CallFunction(1, (void*)printx, (void**)&i);
+    FT_PushIntPointer(4);
+    FT_PushIntPointer(3);
+    FT_PushIntPointer(2);
+    FT_PushIntPointer(1);
+    FT_CallFunction(4, (void*)printx);
 
     toyManager = GetLovenseToyManager();
     toyManager->SetDeveloperToken("SCfh7CamO5irTBgvB53z2hdAYjmq2SJLiUNFLrB1SvOQu9hyemQL5lUimQZTeIqT");
@@ -172,10 +171,7 @@ int main()
         //    double two = std::get<1>((*vars)[1]);
         //    return one - two;
         //    }));
-        lua.RegisterFunction<int,bool(*)(std::string)>("Connect", 1, [](std::string ID){
-            Toys.find(ID);
-            return false;
-            });
+        lua.RegisterFunction("printx", 4,printx);
 
 
         ////run code in languages

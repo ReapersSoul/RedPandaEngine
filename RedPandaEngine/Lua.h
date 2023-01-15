@@ -52,28 +52,23 @@ public:
 	};
 
 	//TODO::
-	template<typename T, typename FN>
-	bool RegisterFunction(std::string Name,int NumArgs, FN f) {
+	bool RegisterFunction(std::string Name,int NumArgs, void* f) {
+		lua_pushlightuserdata(L, (void*)NumArgs);
 		lua_pushlightuserdata(L, f);
 		lua_pushcclosure(L, [](lua_State* L) {
-			//get all variables passed to lua
-			std::vector<Var> vars;
 			int top = lua_gettop(L);
-			for (int i = 0; i < top; i++)
+			for (int i = top-1; i >= 0; i--)
 			{
-				Var v;
 				if (lua_isboolean(L, i + 1)) {
-					bool b = lua_toboolean(L, i + 1);
-					//PushArg(&b);
+					FT_PushIntPointer(lua_toboolean(L, i + 1));
 				}
 				else if (lua_isnumber(L, i + 1)) {
-					double d = lua_tonumber(L, i + 1);
-					//PushArg(&d);
+					int x = lua_tonumber(L, i + 1);
+					FT_PushIntPointer(x);
 				}
-				vars.push_back(v);
 			}
 			//pull function pointer off stack and call
-			lua_pushnumber(L, ((std::function<double(std::vector<Var>*)>*)lua_topointer(L, lua_upvalueindex(1)))->operator()(&vars));
+			FT_CallFunction((int)lua_topointer(L, lua_upvalueindex(1)), (void*)lua_topointer(L, lua_upvalueindex(1)));
 
 			return 1;
 			}, 1);

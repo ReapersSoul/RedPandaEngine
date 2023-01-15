@@ -1,35 +1,31 @@
 .data
 NumArgs QWORD 0
-ArgPointer QWORD 0
-FunctPointer QWORD 0
+FunctionPointer QWORD 0
+ArgSizesPointer QWORD 0
 .code
 ALIGN 16
 
-PushArg PROC
-	push rcx
-	ret
-PushArg ENDP
-
-
-
-CallFunction PROC
+FT_PushIntPointer PROC
 	pop r15
-	mov NumArgs,rcx
-	mov ArgPointer,r8
-	mov FunctPointer,rdx
-
-loopArgs:
-
-	mov rcx, QWORD PTR[ArgPointer]
-	add ArgPointer,1
-	mov rdx, QWORD PTR[ArgPointer]
-
-	mov rcx, QWORD PTR[rcx]
-	mov rdx, QWORD PTR[rdx]
-
-	call FunctPointer
+	push rcx
 	push r15
 	ret
-CallFunction ENDP
+FT_PushIntPointer ENDP
+
+FT_CallFunction PROC
+	;save return addressin in register 15
+	pop r15
+	;load arguments from stack
+	mov NumArgs,rcx
+	mov FunctionPointer, rdx
+	pop rcx
+	pop rdx
+	pop r8
+	pop r9
+	;call funciton
+	call FunctionPointer
+	push r15
+	ret
+FT_CallFunction ENDP
 
 END
