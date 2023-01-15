@@ -2,10 +2,12 @@
 //
 
 #include <iostream>
+#include <string>
 #include "Graphics.h"
 #include "Lua.h"
 #include "Python.h"
 #include "Scripting_Language_Manager.h"
+#include "Lovense_Device.h"
 
 class PrimaryEventHandler :public EventStream::EventProcessor {
 public:
@@ -61,24 +63,88 @@ void ResetColor() {
     std::cout << "\x1b[0m";
 }
 
+Scripting_Language_Manager SLM;
+Lua lua;
+Python python;
+std::map<std::string, Toy> Toys;
+
+
+class lovenseHandler:public ILovenseSDKNotify {
+    /*Call when toy search start*/
+    void LovenseDidSearchStart() {
+        CoutColor("Search Started!");
+    };
+
+    /*Call when toy searching toy*/
+    void LovenseSearchingToys(lovense_toy_info_t* info) {
+        Toy t;
+        t.SetToyManager(toyManager);
+        t.SetID(std::string(info->toy_id));
+        t.SetBatteryLevel(info->toy_battery);
+        t.SetDeviceType((LVSToyType)info->toy_type);
+        t.SetDeviceName(std::string(info->toy_name));
+        Toys.insert(std::pair<std::string, Toy>(info->toy_id, t));
+        CoutColor(info->toy_id);
+    };
+
+    /*Call when something went wrong*/
+    void LovenseErrorOutPut(int errorCode, const char* errorMsg) {
+        CoutColor("Error Code: "+std::to_string(errorCode)+" "+errorMsg);
+    };
+
+
+    /*Call when toy search end*/
+    void LovenseDidSearchEnd() {
+        CoutColor("Search Ended!");
+    };
+
+    /*Call when send cmd start*/
+    void LovenseDidSendCmdStart() {
+        CoutColor("Sent Command Started!");
+    };
+
+    /*Call when send cmd return*/
+    void LovenseSendCmdResult(const char* szToyID, CLovenseToy::CmdType cmd, const char* result, CLovenseToy::Error errorCode) {
+        CoutColor("Toy: "+std::string(szToyID)+" Command: "+std::to_string(cmd)+" result: "+result+" Error Code: "+std::to_string(errorCode));
+    };
+
+    /*Call when send cmd end*/
+    void LovenseDidSendCmdEnd() {
+        CoutColor("Sent Command End!");
+    };
+
+    /*Call when toy connected, or disconnected*/
+    void LovenseToyConnectedStatus(const char* szToyID, bool isConnected) {
+        CoutColor("Toy: " + std::string(szToyID) + " is Connected: " + std::to_string(isConnected));
+    };
+};
+
+void printx(int x) {
+    printf("%d\n", x);
+}
+
 int main()
 {
-    //std::thread windowThread = std::thread([]() {
-    //    SetCallBackWindow(&wind);
-    //    wind.Set_Camera_function(Camera);
-    //    wind.Set_Draw_function(Draw);
-    //    wind.Set_GUI_function(GUI);
-    //    wind.Init();
-    //    wind.AddEventProcessor(&PEH);
+    PushArg((void*)8);
+    CallFunction((void*)printx);
 
-    //    wind.Loop();
+    toyManager = GetLovenseToyManager();
+    toyManager->SetDeveloperToken("SCfh7CamO5irTBgvB53z2hdAYjmq2SJLiUNFLrB1SvOQu9hyemQL5lUimQZTeIqT");
+    toyManager->RegisterEventCallBack(new lovenseHandler());
+    std::thread windowThread = std::thread([]() {
+        SetCallBackWindow(&wind);
+        wind.Set_Camera_function(Camera);
+        wind.Set_Draw_function(Draw);
+        wind.Set_GUI_function(GUI);
+        wind.Init();
+        wind.AddEventProcessor(&PEH);
 
-    //    wind.CleanUp();
-    //    });
-    Scripting_Language_Manager SLM;
-    Lua lua;
+        wind.Loop();
+
+        wind.CleanUp();
+        });
+
     SLM.RegisterLanguage(&lua);
-    Python python;
     SLM.RegisterLanguage(&python);
 
     SLM.Init();
@@ -102,6 +168,10 @@ int main()
         //    double two = std::get<1>((*vars)[1]);
         //    return one - two;
         //    }));
+        lua.RegisterFunction<int,bool(*)(std::string)>("Connect", 1, [](std::string ID){
+            Toys.find(ID);
+            return false;
+            });
 
 
         ////run code in languages
@@ -188,5 +258,5 @@ int main()
     catch (Scripting_Language::Exception e) {
         std::cout << e.Id << "\n" << e.Desc << "\n";
     }
-    //windowThread.join();
+    windowThread.join();
 }

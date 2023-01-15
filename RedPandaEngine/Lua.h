@@ -52,12 +52,8 @@ public:
 	};
 
 	//TODO::
-	template<typename T>
-	bool RegisterFunction(std::string Name, std::function<T(std::vector<Var>*)>* f);
-
-	template<>
-	bool RegisterFunction(std::string Name, std::function<double(std::vector<Var>*)>* f)
-	{
+	template<typename T, typename FN>
+	bool RegisterFunction(std::string Name,int NumArgs, FN f) {
 		lua_pushlightuserdata(L, f);
 		lua_pushcclosure(L, [](lua_State* L) {
 			//get all variables passed to lua
@@ -67,109 +63,24 @@ public:
 			{
 				Var v;
 				if (lua_isboolean(L, i + 1)) {
-					std::get<0>(v) = lua_toboolean(L, i + 1);
+					bool b = lua_toboolean(L, i + 1);
+					PushArg(&b);
 				}
 				else if (lua_isnumber(L, i + 1)) {
-					std::get<1>(v) = lua_tonumber(L, i + 1);
+					double d = lua_tonumber(L, i + 1);
+					PushArg(&d);
 				}
 				vars.push_back(v);
 			}
 			//pull function pointer off stack and call
-			lua_pushnumber(L,((std::function<double(std::vector<Var>*)>*)lua_topointer(L, lua_upvalueindex(1)))->operator()(&vars));
+			lua_pushnumber(L, ((std::function<double(std::vector<Var>*)>*)lua_topointer(L, lua_upvalueindex(1)))->operator()(&vars));
 
 			return 1;
 			}, 1);
 		lua_setglobal(L, Name.c_str());
 		lua_pop(L, lua_gettop(L));
 		return false;
-	}
-
-	template<>
-	bool RegisterFunction(std::string Name, std::function<int(std::vector<Var>*)>* f)
-	{
-		lua_pushlightuserdata(L, f);
-		lua_pushcclosure(L, [](lua_State* L) {
-			//get all variables passed to lua
-			std::vector<Var> vars;
-			int top = lua_gettop(L);
-			for (int i = 0; i < top; i++)
-			{
-				Var v;
-				if (lua_isboolean(L, i + 1)) {
-					std::get<0>(v) = lua_toboolean(L, i + 1);
-				}
-				else if (lua_isnumber(L, i + 1)) {
-					std::get<1>(v) = lua_tonumber(L, i + 1);
-				}
-				vars.push_back(v);
-			}
-			//pull function pointer off stack and call
-			lua_pushinteger(L, ((std::function<int(std::vector<Var>*)>*)lua_topointer(L, lua_upvalueindex(1)))->operator()(&vars));
-
-			return 1;
-			}, 1);
-		lua_setglobal(L, Name.c_str());
-		lua_pop(L, lua_gettop(L));
-		return false;
-	}
-
-	template<>
-	bool RegisterFunction(std::string Name, std::function<bool(std::vector<Var>*)>* f)
-	{
-		lua_pushlightuserdata(L, f);
-		lua_pushcclosure(L, [](lua_State* L) {
-			//get all variables passed to lua
-			std::vector<Var> vars;
-			int top = lua_gettop(L);
-			for (int i = 0; i < top; i++)
-			{
-				Var v;
-				if (lua_isboolean(L, i + 1)) {
-					std::get<0>(v) = lua_toboolean(L, i + 1);
-				}
-				else if (lua_isnumber(L, i + 1)) {
-					std::get<1>(v) = lua_tonumber(L, i + 1);
-				}
-				vars.push_back(v);
-			}
-			//pull function pointer off stack and call
-			lua_pushboolean(L, ((std::function<bool(std::vector<Var>*)>*)lua_topointer(L, lua_upvalueindex(1)))->operator()(&vars));
-
-			return 1;
-			}, 1);
-		lua_setglobal(L, Name.c_str());
-		lua_pop(L, lua_gettop(L));
-		return false;
-	}
-
-	template<>
-	bool RegisterFunction(std::string Name, std::function<std::string(std::vector<Var>*)>* f)
-	{
-		lua_pushlightuserdata(L, f);
-		lua_pushcclosure(L, [](lua_State* L) {
-			//get all variables passed to lua
-			std::vector<Var> vars;
-			int top = lua_gettop(L);
-			for (int i = 0; i < top; i++)
-			{
-				Var v;
-				if (lua_isboolean(L, i + 1)) {
-					std::get<0>(v) = lua_toboolean(L, i + 1);
-				}
-				else if (lua_isnumber(L, i + 1)) {
-					std::get<1>(v) = lua_tonumber(L, i + 1);
-				}
-				vars.push_back(v);
-			}
-			//pull function pointer off stack and call
-			lua_pushstring(L, ((std::function<std::string(std::vector<Var>*)>*)lua_topointer(L, lua_upvalueindex(1)))->operator()(&vars).c_str());
-
-			return 1;
-			}, 1);
-		lua_setglobal(L, Name.c_str());
-		lua_pop(L, lua_gettop(L));
-		return false;
-	}
+	};
 
 	bool SetVar(std::string Name, bool value) {
 		lua_pushinteger(L, value);
@@ -220,7 +131,11 @@ public:
 	};
 	//TODO::
 	bool SetVar(std::string Name, Table value) {
-
+		for (auto itt = value.data.begin(); itt != value.data.end(); itt++) {
+			std::string varname = itt->first;
+			Var vardata = itt->second;
+			
+		}
 
 		lua_pop(L, lua_gettop(L));
 		return true;
@@ -265,6 +180,38 @@ public:
 
 	template<typename T, int numArgs>
 	T CallFunction(std::string Name, ...) {};
+
+	template<int numArgs>
+	void CallFunction(std::string Name, ...)
+	{
+		lua_getglobal(L, Name.c_str());
+		va_list lst;
+		va_start(lst, Name);
+		for (int i = 0; i < numArgs; i++) {
+			int arg = va_arg(lst, int);
+			lua_pushnumber(L, arg);
+		}
+		va_end(lst);
+
+		int error = lua_pcall(L, numArgs, 1, 0);
+		if (error == LUA_OK) {
+			int result = lua_tointeger(L, -1);
+			lua_pop(L, 1);
+			lua_pop(L, lua_gettop(L));
+			return;
+		}
+		else {
+			while (error && lua_gettop(L))
+			{
+				int stack = lua_gettop(L);
+				int err = error;
+				std::string message = lua_tostring(L, -1);
+				lua_pop(L, 1);
+				error = lua_pcall(L, 0, 0, 0);
+				throw Exception(message, "Stack: " + std::to_string(stack) + " Error: " + std::to_string(err));
+			}
+		}
+	}
 
 	template<int numArgs>
 	int CallFunction(std::string Name, ...)

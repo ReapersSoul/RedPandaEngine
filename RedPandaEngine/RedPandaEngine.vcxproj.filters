@@ -25,6 +25,12 @@
     <Filter Include="Header Files\Scripting Languages">
       <UniqueIdentifier>{cc3ef2f2-4373-4872-9fee-3bf9de151ec8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Assembly">
+      <UniqueIdentifier>{4e99f3a4-637b-4969-94bd-1fd8f8c5308e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\FunctionTools">
+      <UniqueIdentifier>{570e6546-4cfc-419b-82a5-fb4d6e6b629c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RedPandaEngine.cpp">
@@ -140,5 +146,16 @@
     <ClInclude Include="Scripting_Language_Manager.h">
       <Filter>Header Files\Scripting Languages</Filter>
     </ClInclude>
+    <ClInclude Include="FunctionTools.h">
+      <Filter>Header Files\FunctionTools</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <MASM Include="FunctionTools64.asm">
+      <Filter>Assembly</Filter>
+    </MASM>
+    <MASM Include="FunctionTools86.asm">
+      <Filter>Assembly</Filter>
+    </MASM>
   </ItemGroup>
 </Project>

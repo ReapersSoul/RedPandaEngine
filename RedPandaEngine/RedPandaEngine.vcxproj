@@ -54,6 +54,7 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.props" />
   </ImportGroup>
   <ImportGroup Label="Shared">
   </ImportGroup>
@@ -158,6 +159,7 @@
   <ItemGroup>
     <ClInclude Include="CSharp.h" />
     <ClInclude Include="DEVICE.h" />
+    <ClInclude Include="FunctionTools.h" />
     <ClInclude Include="G:\SDKs\imgui\backends\imgui_impl_glfw.h" />
     <ClInclude Include="G:\SDKs\imgui\backends\imgui_impl_opengl2.h" />
     <ClInclude Include="G:\SDKs\imgui\backends\imgui_impl_opengl3.h" />
@@ -182,7 +184,14 @@
     <ClInclude Include="TextRenderer.hpp" />
     <ClInclude Include="util.h" />
   </ItemGroup>
+  <ItemGroup>
+    <MASM Include="FunctionTools64.asm" />
+    <MASM Include="FunctionTools86.asm">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </MASM>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.targets" />
   </ImportGroup>
 </Project>

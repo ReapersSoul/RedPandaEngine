@@ -4,6 +4,7 @@
 #include <stdarg.h>
 #include <tuple>
 #include <map>
+#include "FunctionTools.h"
 
 class Scripting_Language {
 public:
@@ -20,9 +21,11 @@ public:
 		std::string Id, Desc;
 	};
 
-	class Table;
+	struct Table;
 	typedef std::tuple<bool,double,int,std::string,void *,Table> Var;
-	class Table {
+
+	struct Table {
+	public:
 		std::map<std::string, Var> data;
 	};
 	virtual bool Init() { return false; };
@@ -33,7 +36,7 @@ public:
 	virtual bool RunString(std::string str) { return false; };
 	
 	//add methods for all types
-	//bool RegisterFunction(std::string Name, std::function<T(std::vector<Var>*)>* f) { return false; };
+	bool RegisterFunction(std::string Name, std::function<void(std::vector<Var>)> f) { return false; };
 	//bool RegisterLinkedVar(std::string Name, T* value) { return false; };
 	
 	
@@ -55,4 +58,36 @@ public:
 	virtual Table GetVarAsTable(std::string Name) { return Table(); };
 	template<typename T, int numArgs>
 	T CallFunction(std::string Name, ...) { return false; };
+
+	template<typename T>
+	static T VarAs(Var) { return Var(); }
+
+	template<>
+	static bool VarAs(Var v) {
+		return std::get<0>(v);
+	}
+
+	template<>
+	static double VarAs(Var v) {
+		return std::get<1>(v);
+	}
+
+	template<>
+	static int VarAs(Var v) {
+		return std::get<2>(v);
+	}
+
+	template<>
+	static std::string VarAs(Var v) {
+		return std::get<3>(v);
+	}
+
+	template<>
+	static void* VarAs(Var v) {
+		return std::get<4>(v);
+	}
+	template<>
+	static Table VarAs(Var v) {
+		return std::get<5>(v);
+	}
 };
