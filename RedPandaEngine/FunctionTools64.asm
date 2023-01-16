@@ -1,5 +1,5 @@
 .data
-NumArgs QWORD 0
+ArgOffset QWORD 20h
 FunctionPointer QWORD 0
 PushedArgs QWORD 0
 .code
@@ -21,6 +21,7 @@ FT_CallFunction PROC
 	
 	;load args
 	mov r14,0
+	mov r11,32
 	loadArg:
 		;jump table
 		cmp r14,0
@@ -31,7 +32,7 @@ FT_CallFunction PROC
 		je third
 		cmp r14,3
 		je fourth
-		jmp FunctionCall
+		jmp AdditionalArgs
 
 		first:
 			pop rcx
@@ -45,6 +46,12 @@ FT_CallFunction PROC
 		fourth:
 			pop r9
 			jmp NextArg
+		AdditionalArgs:
+			pop r13
+			mov r12,rsp
+			add r12,r11
+			mov qword ptr [r12],r13
+			add r11,8
 		NextArg:
 			add r14,1
 			cmp r14,PushedArgs

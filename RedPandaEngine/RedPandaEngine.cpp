@@ -119,12 +119,18 @@ class lovenseHandler:public ILovenseSDKNotify {
     };
 };
 
-void printx(int x,int l,int j,int g,int h) {
-    printf("%d %d %d %d %d\n", x,l,j,g,h);
+void printx(int x,int l,int j,int g,int f,int n) {
+    printf("%d %d %d %d %d\n", x,l,j,g,f,n);
+}
+
+void p(int x, int y, int z, int l, int k,int m,int b) {
+    return;
 }
 
 int main()
 {
+    //p(1,2,3,4,5,6,7);
+    FT_PushIntPointer(6);
     FT_PushIntPointer(5);
     FT_PushIntPointer(4);
     FT_PushIntPointer(3);
