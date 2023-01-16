@@ -52,8 +52,7 @@ public:
 	};
 
 	//TODO::
-	bool RegisterFunction(std::string Name,int NumArgs, void* f) {
-		lua_pushlightuserdata(L, (void*)NumArgs);
+	bool RegisterFunction(std::string Name, void* f) {
 		lua_pushlightuserdata(L, f);
 		lua_pushcclosure(L, [](lua_State* L) {
 			int top = lua_gettop(L);
@@ -68,7 +67,7 @@ public:
 				}
 			}
 			//pull function pointer off stack and call
-			FT_CallFunction((int)lua_topointer(L, lua_upvalueindex(1)), (void*)lua_topointer(L, lua_upvalueindex(1)));
+			FT_CallFunction((void*)lua_topointer(L, lua_upvalueindex(1)));
 
 			return 1;
 			}, 1);
