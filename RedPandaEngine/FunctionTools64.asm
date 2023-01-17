@@ -3,13 +3,16 @@ FunctionPointer QWORD 0
 PushedArgs QWORD 0
 ArgCounter QWORD 0
 ReturnPointer QWORD 0
+ArgStack QWORD 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+ArgStackBeginPtr QWORD ArgStack
+ArgStackPtr QWORD ArgStack
 .code
 ALIGN 16
 
 FT_PushIntPointer PROC
 	pop ReturnPointer
-	push rcx
-	add PushedArgs,1
+	mov QWORD PTR[ArgStackPtr],rcx
+	add ArgStackPtr,1
 	push ReturnPointer
 	ret
 FT_PushIntPointer ENDP
@@ -23,42 +26,32 @@ FT_CallFunction PROC
 	pop ReturnPointer
 	;save function pointer
 	mov FunctionPointer, rcx
-	
 	;load args
-	mov ArgCounter,0
-	loadArg:
-		;jump table
-		cmp ArgCounter,0
-		je first
-		cmp ArgCounter,1
-		je second
-		cmp ArgCounter,2
-		je third
-		cmp ArgCounter,3
-		je fourth
-		jmp FunctionCall
+			mov rcx,QWORD PTR [ArgStackPtr]
+			call CheckLastArg
+			mov rdx,QWORD PTR [ArgStackPtr]
+			call CheckLastArg
+			mov r8,QWORD PTR [ArgStackPtr]
+			call CheckLastArg
+			mov r9,QWORD PTR [ArgStackPtr]
+			call CheckLastArg
 
-		first:
-			pop rcx
-			jmp NextArg
-		second:
-			pop rdx
-			jmp NextArg
-		third:
-			pop r8
-			jmp NextArg
-		fourth:
-			pop r9
-			jmp NextArg
 		NextArg:
-			add ArgCounter,1
-			jmp loadArg
+			push QWORD PTR [ArgStackPtr]
+			call CheckLastArg
+			jmp NextArg
 				;call funciton
+
+	CheckLastArg:
+			sub ArgStackPtr,1
+			push rcx
+			mov rcx,ArgStackBeginPtr
+			cmp ArgStackPtr,rcx
+			pop rcx
+			jle FunctionCall
+			ret
+
 	FunctionCall:
-		push r9
-		push r8
-		push rdx
-		push rcx
 		mov PushedArgs,0
 		call FunctionPointer
 	push ReturnPointer
