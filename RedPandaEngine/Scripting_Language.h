@@ -7,6 +7,9 @@
 #include "FunctionTools.h"
 
 class Scripting_Language {
+protected:
+	std::string Name;
+	glm::vec3 color;
 public:
 	enum Type {
 		e_bool, e_double, e_int, e_string, e_voidP, e_Table
@@ -20,6 +23,14 @@ public:
 		int Num_Id;
 		std::string Id, Desc;
 	};
+
+	std::string GetName() {
+		return Name;
+	}
+	
+	glm::vec3 GetColor() {
+		return color;
+	}
 
 	struct Table;
 	typedef std::tuple<bool,double,int,std::string,void *,Table> Var;
@@ -36,8 +47,7 @@ public:
 	virtual bool RunString(std::string str) { return false; };
 	
 	//add methods for all types
-	bool RegisterFunction(std::string Name, std::function<void(std::vector<Var>)> f) { return false; };
-	//bool RegisterLinkedVar(std::string Name, T* value) { return false; };
+	virtual bool RegisterFunction(std::string Name, void* f) { return false; };
 	
 	
 	virtual bool SetVar(std::string Name, bool value) { return false; };

@@ -42,37 +42,17 @@ void Draw(GLFWwindow* wind, int Window_Width, int Window_Height) {
 
 }
 
-enum ScriptingConsoleType {
-    SCT_LUA,
-    SCT_JS,
-    SCT_JAVA,
-    SCT_CSHARP,
-    SCT_PYTHON,
-    SCT_NATIVE,
-    SCT_NONE
-};
-
-void CoutColor(std::string str, int r=255, int g=255, int b=255) {
-    std::cout<<"\x1b[38;2;"+std::to_string(r) + ";" + std::to_string(g) + ";" + std::to_string(b) + "m" + str + "\x1b[0m";
-}
-void SetColor(int r, int g, int b) {
-    std::cout << "\x1b[38;2;" + std::to_string(r) + ";" + std::to_string(g) + ";" + std::to_string(b) + "m";
-}
-
-void ResetColor() {
-    std::cout << "\x1b[0m";
-}
-
 Scripting_Language_Manager SLM;
 Lua lua;
 Python python;
 std::map<std::string, Toy> Toys;
 
+std::string SelectedDevice = "";
 
 class lovenseHandler:public ILovenseSDKNotify {
     /*Call when toy search start*/
     void LovenseDidSearchStart() {
-        CoutColor("Search Started!");
+        CoutColor("Search Started!\n");
     };
 
     /*Call when toy searching toy*/
@@ -84,55 +64,78 @@ class lovenseHandler:public ILovenseSDKNotify {
         t.SetDeviceType((LVSToyType)info->toy_type);
         t.SetDeviceName(std::string(info->toy_name));
         Toys.insert(std::pair<std::string, Toy>(info->toy_id, t));
-        CoutColor(info->toy_id);
+        CoutColor("\n");
+        CoutColor("Toy ID: ");
+        CoutColor(info->toy_id,0,255,0);
+        SelectedDevice = info->toy_id;
+        CoutColor("\n");
     };
 
     /*Call when something went wrong*/
     void LovenseErrorOutPut(int errorCode, const char* errorMsg) {
-        CoutColor("Error Code: "+std::to_string(errorCode)+" "+errorMsg);
+        //CoutColor("Error Code: "+std::to_string(errorCode)+" "+errorMsg+"\n");
     };
 
 
     /*Call when toy search end*/
     void LovenseDidSearchEnd() {
-        CoutColor("Search Ended!");
+        CoutColor("Search Ended!\n");
     };
 
     /*Call when send cmd start*/
     void LovenseDidSendCmdStart() {
-        CoutColor("Sent Command Started!");
+        //CoutColor("Sent Command Started!\n");
     };
 
     /*Call when send cmd return*/
     void LovenseSendCmdResult(const char* szToyID, CLovenseToy::CmdType cmd, const char* result, CLovenseToy::Error errorCode) {
-        CoutColor("Toy: "+std::string(szToyID)+" Command: "+std::to_string(cmd)+" result: "+result+" Error Code: "+std::to_string(errorCode));
+        //CoutColor("Toy: "+std::string(szToyID)+" Command: "+std::to_string(cmd)+" result: "+result+" Error Code: "+std::to_string(errorCode) + "\n");
     };
 
     /*Call when send cmd end*/
     void LovenseDidSendCmdEnd() {
-        CoutColor("Sent Command End!");
+        //CoutColor("Sent Command End!\n");
     };
 
     /*Call when toy connected, or disconnected*/
     void LovenseToyConnectedStatus(const char* szToyID, bool isConnected) {
-        CoutColor("Toy: " + std::string(szToyID) + " is Connected: " + std::to_string(isConnected));
+        //CoutColor("Toy: " + std::string(szToyID) + " is Connected: " + std::to_string(isConnected));
     };
 };
 
 void printx(int a,int b,int c,int d,int e,int f,int g,int h) {
     printf("%d %d %d %d %d %d %d %d\n", a,b,c,d,e,f,g,h);
 }
+void printstr(char* str) {
+    printf(str);
+}
+
+void Search() {
+    toyManager->StartSearchToy();
+}
+
+void Connect() {
+    auto toy = Toys.find(SelectedDevice);
+    if ( toy != Toys.end()) {
+        toy->second.RequestConnect();
+    }
+}
 
 int main()
 {
-    FT_PushIntPointer(8);
-    FT_PushIntPointer(7);
-    FT_PushIntPointer(6);
-    FT_PushIntPointer(5);
-    FT_PushIntPointer(4);
-    FT_PushIntPointer(3);
-    FT_PushIntPointer(2);
-    FT_PushIntPointer(1);
+	
+    FT_StartCall();
+    FT_PushIntPointer((void*)"Hello World!\n");
+    FT_CallFunction((void*)printstr);
+    FT_StartCall();
+    FT_PushIntPointer((void*)8);
+    FT_PushIntPointer((void*)7);
+    FT_PushIntPointer((void*)6);
+    FT_PushIntPointer((void*)5);
+    FT_PushIntPointer((void*)4);
+    FT_PushIntPointer((void*)3);
+    FT_PushIntPointer((void*)2);
+    FT_PushIntPointer((void*)1);
     FT_CallFunction((void*)printx);
 
     toyManager = GetLovenseToyManager();
@@ -175,7 +178,10 @@ int main()
         //    double two = std::get<1>((*vars)[1]);
         //    return one - two;
         //    }));
-        lua.RegisterFunction("printx", printx);
+        lua.RegisterFunction("printx", (void*)printx);
+        lua.RegisterFunction("printstr", (void*)printstr);
+        lua.RegisterFunction("Search", (void*)Search);
+        lua.RegisterFunction("Connect", (void*)Connect);
 
 
         ////run code in languages
@@ -183,81 +189,7 @@ int main()
         //lua.RunString("print(FalStr)");
         //lua.RunString("print(FalNum-20)");
 
-        //setup Live Terminal
-        lua.RunString("_G.Exit=function() _G.___Live_Terminal_Run___=false end");
-        ScriptingConsoleType sct=SCT_NONE;
-        bool LiveConsole=true;
-        while (LiveConsole) {
-            std::string tmp;
-            switch (sct)
-            {
-            case SCT_LUA:
-                while (lua.GetVarAsBool("___Live_Terminal_Run___"))
-                {
-                    try {
-                        std::string s;
-                        CoutColor("LUA: ",242, 237, 86);
-                        std::getline(std::cin, s);
-                        SetColor(40, 177, 249);
-                        lua.RunString(s);
-                        ResetColor();
-                    }
-                    catch (Scripting_Language::Exception e) {
-                        std::cout << e.Id << "\n" << e.Desc << "\n";
-                    }
-                }
-                CoutColor("Lua Live Terminal Exited!!\n", 102, 255, 102);
-                sct = SCT_NONE;
-                break;
-            case SCT_JS:
-                break;
-            case SCT_JAVA:
-                break;
-            case SCT_CSHARP:
-                break;
-            case SCT_PYTHON:
-                while (python.GetVarAsBool("___Live_Terminal_Run___"))
-                {
-                    try {
-                        std::string s;
-                        CoutColor("LUA: ", 0, 102, 204);
-                        std::getline(std::cin, s);
-                        SetColor(255, 255, 102);
-                        lua.RunString(s);
-                        ResetColor();
-                    }
-                    catch (Scripting_Language::Exception e) {
-                        std::cout << e.Id << "\n" << e.Desc << "\n";
-                    }
-                }
-                CoutColor("Lua Live Terminal Exited!!\n", 102, 255, 102);
-                sct = SCT_NONE;
-                break;
-            case SCT_NATIVE:
-                break;
-            case SCT_NONE:
-                CoutColor("Select Live Console (", 255, 51, 51); 
-                CoutColor("LUA,", 242, 237, 86); 
-                CoutColor(" JS,"); 
-                CoutColor(" JAVA,"); 
-                CoutColor(" CSHARP,"); 
-                CoutColor(" PYTHON,",0,102,204); 
-                CoutColor(" NATIVE");
-                CoutColor("): ", 255, 51, 51);
-                std::getline(std::cin, tmp);
-                if (tmp == "Exit()") {
-                    LiveConsole=false;
-                }else if (tmp == "LUA") {
-                    sct = SCT_LUA;
-                }
-                else if (tmp == "PYTHON") {
-                    sct = SCT_PYTHON;
-                }
-                break;
-            default:
-                break;
-            }
-        }
+        SLM.RunLiveConsole();
     }
     catch (Scripting_Language::Exception e) {
         std::cout << e.Id << "\n" << e.Desc << "\n";

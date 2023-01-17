@@ -11,6 +11,11 @@ class Python :public Scripting_Language {
 	char* version_string;
 public:
 
+	Python() {
+		Name = "Python";
+		color = glm::vec3(21, 234, 128);
+	}
+
 	bool Init() {
 		Py_Initialize();
 		/* Setup the __main__ module for us to use */

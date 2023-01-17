@@ -6,7 +6,12 @@
 class Lua :public Scripting_Language {
 	lua_State* L;
 public:
+	Lua() {
+		Name = "Lua";
+		color = glm::vec3(221, 219, 59);
+	}
 
+	
 	bool Init() {
 		L = luaL_newstate();
 		luaL_openlibs(L);
@@ -50,18 +55,22 @@ public:
 		IfErrorThrowException(lua_pcall(L, 0, 0, 0));
 		return true;
 	};
-
-	//TODO::
-	bool RegisterFunction(std::string Name, void* f) {
+	
+	bool RegisterFunction(std::string Name, void* f) override{
 		lua_pushlightuserdata(L, f);
 		lua_pushcclosure(L, [](lua_State* L) {
+			FT_StartCall();
 			void* v = (void*)lua_topointer(L, lua_upvalueindex(1));
 			int top = lua_gettop(L);
+			std::string x;
 			for (int i = top-1; i >= 0; i--)
 			{
 				if (lua_isnumber(L, i + 1)) {
 					int x = lua_tonumber(L, i + 1);
-					FT_PushIntPointer(x);
+					FT_PushIntPointer((void*)x);
+				}
+				else if (lua_isstring(L, i + 1)) {
+					FT_PushIntPointer((void*)lua_tostring(L, i + 1));
 				}
 			}
 			//pull function pointer off stack and call
