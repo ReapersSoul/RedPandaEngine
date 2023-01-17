@@ -119,23 +119,22 @@ class lovenseHandler:public ILovenseSDKNotify {
     };
 };
 
-void printx(int x,int l,int j,int g,int f,int n) {
-    printf("%d %d %d %d %d\n", x,l,j,g,f,n);
-}
-
-void p(int x, int y, int z, int l, int k,int m,int b) {
-    return;
+void printx(int a,int b,int c,int d,int e,int f,int g,int h) {
+    int* ptr = &e;
+    printf("%d %d %d %d %d %d %d %d\n", a,b,c,d,e,f,g,h);
 }
 
 int main()
 {
-    //p(1,2,3,4,5,6,7);
-    FT_PushIntPointer(6);
-    FT_PushIntPointer(5);
-    FT_PushIntPointer(4);
-    FT_PushIntPointer(3);
-    FT_PushIntPointer(2);
-    FT_PushIntPointer(1);
+    printx(1,2,3,4,5,6,7,8);
+    FT_PushIntPointer(28);
+    FT_PushIntPointer(27);
+    FT_PushIntPointer(26);
+    FT_PushIntPointer(25);
+    FT_PushIntPointer(24);
+    FT_PushIntPointer(23);
+    FT_PushIntPointer(22);
+    FT_PushIntPointer(21);
     FT_CallFunction((void*)printx);
 
     toyManager = GetLovenseToyManager();

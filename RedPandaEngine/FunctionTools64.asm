@@ -2,37 +2,46 @@
 ArgOffset QWORD 20h
 FunctionPointer QWORD 0
 PushedArgs QWORD 0
+ArgCounter QWORD 0
+StackCounter QWORD 0
+TmpArg QWORD 0
+StackPointer QWORD 0
+ReturnPointer QWORD 0
 .code
 ALIGN 16
 
 FT_PushIntPointer PROC
-	pop r15
+	pop rdx
 	push rcx
 	add PushedArgs,1
-	push r15
+	push rdx
 	ret
 FT_PushIntPointer ENDP
 
+FT_FinishPush PROC
+	
+FT_FinishPush ENDP
+
 FT_CallFunction PROC
 	;save return addressin in register 15
-	pop r15
+	pop ReturnPointer
 	;save function pointer
 	mov FunctionPointer, rcx
 	
 	;load args
-	mov r14,0
-	mov r11,32
+	mov ArgCounter,0
+	mov StackCounter,32
 	loadArg:
 		;jump table
-		cmp r14,0
+		cmp ArgCounter,0
 		je first
-		cmp r14,1
+		cmp ArgCounter,1
 		je second
-		cmp r14,2
+		cmp ArgCounter,2
 		je third
-		cmp r14,3
+		cmp ArgCounter,3
 		je fourth
-		jmp AdditionalArgs
+		jmp FunctionCall
 
 		first:
 			pop rcx
@@ -46,21 +55,18 @@ FT_CallFunction PROC
 		fourth:
 			pop r9
 			jmp NextArg
-		AdditionalArgs:
-			pop r13
-			mov r12,rsp
-			add r12,r11
-			mov qword ptr [r12],r13
-			add r11,8
 		NextArg:
-			add r14,1
-			cmp r14,PushedArgs
-			jne loadArg
+			add ArgCounter,1
+			jmp loadArg
 				;call funciton
 	FunctionCall:
+		push r9
+		push r8
+		push rdx
+		push rcx
 		mov PushedArgs,0
 		call FunctionPointer
-	push r15
+	push ReturnPointer
 	ret
 FT_CallFunction ENDP
 
