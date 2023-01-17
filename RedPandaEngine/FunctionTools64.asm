@@ -1,20 +1,16 @@
 .data
-ArgOffset QWORD 20h
 FunctionPointer QWORD 0
 PushedArgs QWORD 0
 ArgCounter QWORD 0
-StackCounter QWORD 0
-TmpArg QWORD 0
-StackPointer QWORD 0
 ReturnPointer QWORD 0
 .code
 ALIGN 16
 
 FT_PushIntPointer PROC
-	pop rdx
+	pop ReturnPointer
 	push rcx
 	add PushedArgs,1
-	push rdx
+	push ReturnPointer
 	ret
 FT_PushIntPointer ENDP
 
@@ -30,7 +26,6 @@ FT_CallFunction PROC
 	
 	;load args
 	mov ArgCounter,0
-	mov StackCounter,32
 	loadArg:
 		;jump table
 		cmp ArgCounter,0

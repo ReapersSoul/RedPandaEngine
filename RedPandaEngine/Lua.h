@@ -55,19 +55,17 @@ public:
 	bool RegisterFunction(std::string Name, void* f) {
 		lua_pushlightuserdata(L, f);
 		lua_pushcclosure(L, [](lua_State* L) {
+			void* v = (void*)lua_topointer(L, lua_upvalueindex(1));
 			int top = lua_gettop(L);
 			for (int i = top-1; i >= 0; i--)
 			{
-				if (lua_isboolean(L, i + 1)) {
-					FT_PushIntPointer(lua_toboolean(L, i + 1));
-				}
-				else if (lua_isnumber(L, i + 1)) {
+				if (lua_isnumber(L, i + 1)) {
 					int x = lua_tonumber(L, i + 1);
 					FT_PushIntPointer(x);
 				}
 			}
 			//pull function pointer off stack and call
-			FT_CallFunction((void*)lua_topointer(L, lua_upvalueindex(1)));
+			FT_CallFunction(v);
 
 			return 1;
 			}, 1);
