@@ -13,7 +13,7 @@ void ResetColor() {
 
 class Scripting_Language_Manager :private Scripting_Language {
 	std::vector<Scripting_Language*> langs;
-    int CurrentConsole = 0;
+    int CurrentConsole = -1;
 	bool LiveConsoleLoop = true;
 	bool LiveConsoleInstance = true;
 public:
@@ -48,7 +48,7 @@ public:
 
 	void RunLiveConsole() {
         //setup Live Terminal	
-		
+		SetVar<bool>("Exit", false);
         //run console
         while (LiveConsoleLoop) {                
                 CoutColor("Select Live Console (", 255, 51, 51);
@@ -69,6 +69,12 @@ public:
 						break;
 					}
 				}
+				if (CurrentConsole == -1) {
+					CoutColor("Not An Avalible Language!\n", 255, 0, 0);
+					continue;
+				}
+				
+				LiveConsoleInstance = true;
 				while (LiveConsoleInstance)
 				{
 					try {
