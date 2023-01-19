@@ -5,6 +5,7 @@
 #include <LovenseToyInfo.h>
 #include <map>
 #include <functional>
+#include "Scripting_Language.h"
 
 class Lovense_Device :public Device {
 	LVSToyType Device_Type;
@@ -13,7 +14,7 @@ class Lovense_Device :public Device {
 };
 
 CLovenseToyManager* toyManager;
-class Toy {
+class Toy : public Scripting_Language::Tableizable {
 	enum LightStatus {
 		L_on,
 		L_off,
@@ -33,41 +34,155 @@ class Toy {
 	std::map<std::string, Toy*> TrackingTargets;
 
 public:
-
-	LVSToyType GetType() {
-		return device_type;
+	//setters
+	void SetVibrationLevel(int level) {
+		vibration_level = level;
 	}
-
-	std::string GetID() {
-		return ID;
+	void SetVibrationLevel2(int level) {
+		vibration_level_2 = level;
 	}
-
-	void AddTrackingTarget(Toy* t) {
-		if (TrackingTargets.find(t->GetID()) == TrackingTargets.end()) {
-			TrackingTargets.insert(std::pair<std::string, Toy*>(t->GetID(), t));
-		}
+	void SetRotationLevel(int level) {
+		rotation_level = level;
 	}
-
-	void SetToyManager(CLovenseToyManager* mgr) {
-		toyManager = mgr;
+	void SetRotationDir(bool dir) {
+		rotation_dir_clockwise = dir;
 	}
-	void SetConnected(bool b) {
-		connected = b;
+	void SetBatteryLevel(int level) {
+		battery_level = level;
+	}
+	void SetConnected(bool c) {
+		connected = c;
+	}
+	void SetToyManager(CLovenseToyManager* tm) {
+		toyManager = tm;
+	}
+	void SetID(std::string id) {
+		ID = id;
+	}
+	void SetName(std::string name) {
+		Name = name;
+	}
+	void SetDeviceType(LVSToyType type) {
+		device_type = type;
+	}
+	void SetLightStatus(LightStatus status) {
+		light_status = status;
+	}
+	void SetTracking(bool track) {
+		is_tracking = track;
+	}
+	void SetTrackingTarget(std::string id, Toy* t) {
+		TrackingTargets.insert(std::pair<std::string, Toy*>(id, t));
+	}
+	//getters
+	int GetVibrationLevel() {
+		return vibration_level;
+	}
+	int GetVibrationLevel2() {
+		return vibration_level_2;
+	}
+	int GetRotationLevel() {
+		return rotation_level;
+	}
+	bool GetRotationDir() {
+		return rotation_dir_clockwise;
+	}
+	int GetBatteryLevel() {
+		return battery_level;
 	}
 	bool GetConnected() {
 		return connected;
 	}
-	void SetID(std::string id) {
-		ID = id;
-	};
-	void SetDeviceName(std::string name) {
-		Name = name;
-	};
-	void SetBatteryLevel(int i) {
-		battery_level = i;
+	std::string GetID() {
+		return ID;
 	}
-	void SetDeviceType(LVSToyType type) {
-		device_type = type;
+	std::string GetName() {
+		return Name;
+	}
+	LVSToyType GetDeviceType() {
+		return device_type;
+	}
+	LightStatus GetLightStatus() {
+		return light_status;
+	}
+	bool GetTracking() {
+		return is_tracking;
+	}
+	Toy* GetTrackingTarget(std::string id) {
+		return TrackingTargets.at(id);
+	}
+	
+	
+	
+	/*  
+		0 : bool
+		1 : double
+		2 : int
+		3 : :std::string
+		4 : void *
+		5 : Table
+		EX:
+		std::get<2>(v) = (int)28;
+	*/
+	//to table
+	Scripting_Language::Table ToTable() {
+		Scripting_Language::Table t;
+		Scripting_Language::Var v;
+		std::get<Scripting_Language::e_string>(v) = ID;
+		t.data.insert(std::pair<std::string, std::pair<int, Scripting_Language::Var>>("ID", std::pair<int, Scripting_Language::Var>(Scripting_Language::e_string, v)));
+		std::get<Scripting_Language::e_string>(v) = Name;
+		t.data.insert(std::pair<std::string, std::pair<int, Scripting_Language::Var>>("Name", std::pair<int, Scripting_Language::Var>(Scripting_Language::e_string, v)));
+		std::get<Scripting_Language::e_int>(v) = vibration_level;
+		t.data.insert(std::pair<std::string, std::pair<int, Scripting_Language::Var>>("Vibration_Level", std::pair<int, Scripting_Language::Var>(Scripting_Language::e_int, v)));
+		std::get<Scripting_Language::e_int>(v) = vibration_level_2;
+		t.data.insert(std::pair<std::string, std::pair<int, Scripting_Language::Var>>("Vibration_Level_2", std::pair<int, Scripting_Language::Var>(Scripting_Language::e_int, v)));
+		std::get<Scripting_Language::e_int>(v) = rotation_level;
+		t.data.insert(std::pair<std::string, std::pair<int, Scripting_Language::Var>>("Rotation_Level", std::pair<int, Scripting_Language::Var>(Scripting_Language::e_int, v)));
+		std::get<Scripting_Language::e_bool>(v) = rotation_dir_clockwise;
+		t.data.insert(std::pair<std::string, std::pair<int, Scripting_Language::Var>>("Rotation_Dir_Clockwise", std::pair<int, Scripting_Language::Var>(Scripting_Language::e_bool, v)));
+		std::get<Scripting_Language::e_int>(v) = battery_level;
+		t.data.insert(std::pair<std::string, std::pair<int, Scripting_Language::Var>>("Battery_Level", std::pair<int, Scripting_Language::Var>(Scripting_Language::e_int, v)));
+		std::get<Scripting_Language::e_bool>(v) = connected;
+		t.data.insert(std::pair<std::string, std::pair<int, Scripting_Language::Var>>("Connected", std::pair<int, Scripting_Language::Var>(Scripting_Language::e_bool, v)));
+		std::get<Scripting_Language::e_bool>(v) = is_tracking;
+		t.data.insert(std::pair<std::string, std::pair<int, Scripting_Language::Var>>("Is_Tracking", std::pair<int, Scripting_Language::Var>(Scripting_Language::e_bool, v)));
+		std::get<Scripting_Language::e_int>(v) = light_status;
+		t.data.insert(std::pair<std::string, std::pair<int, Scripting_Language::Var>>("Light_Status", std::pair<int, Scripting_Language::Var>(Scripting_Language::e_int, v)));
+		return t;
+	}
+	/*
+	0 : bool
+	1 : double
+	2 : int
+	3 : :std::string
+	4 : void *
+	5 : Table
+	EX:
+	std::get<2>(v) = (int)28;
+	*/
+	//from table
+	void FromTable(Scripting_Language::Table t) {
+		Scripting_Language::Var v;
+		v = t.data["ID"].second;
+		ID = std::get<Scripting_Language::e_string>(v);
+		v = t.data["Name"].second;
+		Name = std::get<Scripting_Language::e_string>(v);
+		v = t.data["Vibration_Level"].second;
+		vibration_level = std::get<Scripting_Language::e_int>(v);
+		v = t.data["Vibration_Level_2"].second;
+		vibration_level_2 = std::get<Scripting_Language::e_int>(v);
+		v = t.data["Rotation_Level"].second;
+		rotation_level = std::get<Scripting_Language::e_int>(v);
+		v = t.data["Rotation_Dir_Clockwise"].second;
+		rotation_dir_clockwise = std::get<Scripting_Language::e_bool>(v);
+		v = t.data["Battery_Level"].second;
+		battery_level = std::get<Scripting_Language::e_int>(v);
+		v = t.data["Connected"].second;
+		connected = std::get<Scripting_Language::e_bool>(v);
+		v = t.data["Is_Tracking"].second;
+		is_tracking = std::get<Scripting_Language::e_bool>(v);
+		v = t.data["Light_Status"].second;
+		light_status = (LightStatus)std::get<Scripting_Language::e_int>(v);
 	}
 
 	void RequestDeviceType() {

@@ -132,13 +132,47 @@ public:
 	};
 	//TODO::
 	bool SetVar(std::string Name, Table value) {
-		for (auto itt = value.data.begin(); itt != value.data.end(); itt++) {
-			std::string varname = itt->first;
-			Var vardata = itt->second;
-			
+		//push the table to lua
+		/*
+			0 : bool
+			1 : double
+			2 : int
+			3 : :std::string
+			4 : void *
+			5 : Table
+			EX:
+			std::get<2>(v) = (int)28;
+		*/
+		lua_newtable(L);
+		for (std::map<std::string, std::pair<int, Scripting_Language::Var>>::iterator it = value.data.begin(); it != value.data.end(); ++it)
+		{
+			lua_pushstring(L, it->first.c_str());
+			switch (it->second.first)
+			{
+			case 0:
+				lua_pushboolean(L, std::get<Scripting_Language::e_bool>(it->second.second));
+				break;
+			case 1:
+				lua_pushnumber(L, std::get<Scripting_Language::e_double>(it->second.second));
+				break;
+			case 2:
+				lua_pushinteger(L, std::get<Scripting_Language::e_int>(it->second.second));
+				break;
+			case 3:
+				lua_pushstring(L, std::get<Scripting_Language::e_string>(it->second.second).c_str());
+				break;
+			case 4:
+				lua_pushlightuserdata(L, std::get<Scripting_Language::e_voidP>(it->second.second));
+				break;
+			case 5:
+				
+			default:
+				break;
+			}
+			lua_settable(L, -3);
 		}
-
-		lua_pop(L, lua_gettop(L));
+		lua_setglobal(L, Name.c_str());
+		lua_pop(L, lua_gettop(L));	
 		return true;
 	};
 
@@ -173,10 +207,37 @@ public:
 		lua_pop(L, 1);
 		return message;
 	}
+	Table GetVarAsTable(std::string Name) { 
+		Table t;
+		lua_getglobal(L, Name.c_str());
+		lua_pushnil(L);
+		while (lua_next(L, -2) != 0) {
+			// key is at index -2 and value at index -1 
+			std::string key = lua_tostring(L, -2);
+			if (lua_isnumber(L, -1)) {
+				std::get<int>(t.data[key].second) = lua_tointeger(L, -1);
+				t.data[key].first = 0;
+			}
+			else if (lua_isstring(L, -1)) {
+				std::get<std::string>(t.data[key].second) = lua_tostring(L, -1);
+				t.data[key].first = 2;
+			}
+			else if (lua_isboolean(L, -1)) {
+				std::get<bool>(t.data[key].second) = lua_toboolean(L, -1);
+				t.data[key].first = 3;
+			}
+			// removes 'value'; keeps 'key' for next iteration
+			lua_pop(L, 1);
+		}
+		// removes 'key'; after this, the stack is empty
+		lua_pop(L, 1);
+		return t;
+	};
+	
 	double GetVarAsDouble(std::string Name) { return false; };
 	char* GetVarAsCharP(std::string Name) { return (char*)""; };
 	const char* GetVarAsConstCharP(std::string Name) { return ""; };
-	Table GetVarAsTable(std::string Name) { return Table(); };
+	
 
 
 	template<typename T, int numArgs>

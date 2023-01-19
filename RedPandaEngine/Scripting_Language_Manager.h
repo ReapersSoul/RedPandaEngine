@@ -16,6 +16,7 @@ class Scripting_Language_Manager :private Scripting_Language {
     int CurrentConsole = -1;
 	bool LiveConsoleLoop = true;
 	bool LiveConsoleInstance = true;
+	bool PauseOutput = false;
 public:
 
 	void RegisterLanguage(Scripting_Language* sl) {
@@ -85,6 +86,9 @@ public:
 						langs[CurrentConsole]->RunString(s);
 						ResetColor();
 						LiveConsoleInstance = langs[CurrentConsole]->GetVarAsBool("Exit");
+						while (PauseOutput) {
+							std::this_thread::sleep_for(std::chrono::milliseconds(100));
+						}
 					}
 					catch (Scripting_Language::Exception e) {
 						std::cout << e.Id << "\n" << e.Desc << "\n";
@@ -92,6 +96,11 @@ public:
 				}
 				CoutColor(langs[CurrentConsole]->GetName() + " Live Terminal Exited!!\n", 102, 255, 102);
         }
+	}
+
+	//set pause output
+	void SetPauseOutput(bool b) {
+		PauseOutput = b;
 	}
 
 	////TODO::

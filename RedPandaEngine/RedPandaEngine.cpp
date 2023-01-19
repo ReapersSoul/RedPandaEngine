@@ -62,13 +62,15 @@ class lovenseHandler:public ILovenseSDKNotify {
         t.SetID(std::string(info->toy_id));
         t.SetBatteryLevel(info->toy_battery);
         t.SetDeviceType((LVSToyType)info->toy_type);
-        t.SetDeviceName(std::string(info->toy_name));
+        t.SetName(info->toy_name);
+        lua.SetVar(info->toy_id, t.ToTable());
         Toys.insert(std::pair<std::string, Toy>(info->toy_id, t));
         CoutColor("\n");
         CoutColor("Toy ID: ");
         CoutColor(info->toy_id,0,255,0);
         SelectedDevice = info->toy_id;
         CoutColor("\n");
+		toyManager->StopSearchToy();
     };
 
     /*Call when something went wrong*/
@@ -80,6 +82,7 @@ class lovenseHandler:public ILovenseSDKNotify {
     /*Call when toy search end*/
     void LovenseDidSearchEnd() {
         CoutColor("Search Ended!\n");
+		SLM.SetPauseOutput(false);
     };
 
     /*Call when send cmd start*/
@@ -89,7 +92,15 @@ class lovenseHandler:public ILovenseSDKNotify {
 
     /*Call when send cmd return*/
     void LovenseSendCmdResult(const char* szToyID, CLovenseToy::CmdType cmd, const char* result, CLovenseToy::Error errorCode) {
-        //CoutColor("Toy: "+std::string(szToyID)+" Command: "+std::to_string(cmd)+" result: "+result+" Error Code: "+std::to_string(errorCode) + "\n");
+        CoutColor("Toy: " + std::string(szToyID) + " Command: " + std::to_string(cmd) + " result: " + result + " Error Code: " + std::to_string(errorCode) + "\n");
+        switch (cmd)
+        {
+        case CLovenseToy::CmdType::COMMAND_VIBRATE:
+			//Toys.find(szToyID)->second.SetVibrationLevel()
+			break;
+        default:
+            break;
+        }
     };
 
     /*Call when send cmd end*/
@@ -99,7 +110,8 @@ class lovenseHandler:public ILovenseSDKNotify {
 
     /*Call when toy connected, or disconnected*/
     void LovenseToyConnectedStatus(const char* szToyID, bool isConnected) {
-        //CoutColor("Toy: " + std::string(szToyID) + " is Connected: " + std::to_string(isConnected));
+        CoutColor("Toy: " + std::string(szToyID) + " Connected: " + (isConnected? "True":"False"));
+        Toys.find(szToyID)->second.SetConnected(isConnected);
     };
 };
 
@@ -112,6 +124,7 @@ void printstr(char* str) {
 
 void Search() {
     toyManager->StartSearchToy();
+    SLM.SetPauseOutput(true);
 }
 
 void Connect() {
@@ -120,6 +133,19 @@ void Connect() {
         toy->second.RequestConnect();
     }
 }
+
+void Vibrate(int level,int seconds) {
+    auto toy = Toys.find(SelectedDevice);
+    if (toy != Toys.end()) {
+        //request vibration
+        toy->second.RequestVibrate(level);
+        //sleep for seconds
+		std::this_thread::sleep_for(std::chrono::seconds(seconds));
+        //request stop vibration
+		toy->second.RequestVibrate(0);
+    }
+}
+
 
 int main()
 {
@@ -165,7 +191,6 @@ int main()
         //register variables in languages
         //SLM.SetVar("FalStr", "fuck");
         //SLM.SetVar("FalNum", 100);
-        SLM.SetVar("___Live_Terminal_Run___", true);
 
         //register functions in languages
         //SLM.RegisterFunction<double>("ADD", new std::function<double(std::vector<Scripting_Language::Var>*)>([](std::vector<Scripting_Language::Var>* vars) {
@@ -182,6 +207,7 @@ int main()
         lua.RegisterFunction("printstr", (void*)printstr);
         lua.RegisterFunction("Search", (void*)Search);
         lua.RegisterFunction("Connect", (void*)Connect);
+		lua.RegisterFunction("Vibrate", (void*)Vibrate);
 
 
         ////run code in languages

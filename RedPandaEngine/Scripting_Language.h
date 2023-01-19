@@ -37,8 +37,13 @@ public:
 
 	struct Table {
 	public:
-		std::map<std::string, Var> data;
+		std::map<std::string, std::pair<int,Var>> data;
 	};
+	class Tableizable {
+		virtual Table ToTable() { return Table(); };
+		virtual void FromTable() {};
+	};
+	
 	virtual bool Init() { return false; };
 	virtual bool Deconstruct() { return false; };
 	virtual bool LoadScript(std::string path) { return false; };
