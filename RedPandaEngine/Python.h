@@ -1,10 +1,10 @@
 #pragma once
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
-#include "Language.h"
+#include "VirtualMachineLanguage.h"
 
 
-class Python :public Language {
+class Python :public VirtualMachineLanguage {
 	PyObject* main_module, * main_dict;
 	PyObject* sys_module, * sys_dict;
 	PyObject* version_obj;
@@ -13,7 +13,9 @@ public:
 
 	Python() {
 		Name = "Python";
-		color = glm::vec3(21, 234, 128);
+		PrimaryColor = glm::vec3(21, 234, 128);
+		//maroon
+		SecondaryColor = glm::vec3(128, 21, 21);
 	}
 
 	bool Init() {
@@ -136,13 +138,13 @@ public:
 		Py_XDECREF(i_obj);
 		return true;
 	};
-	bool SetVar(std::string Name, Table value) {
-		PyObject* i_obj;
-		i_obj = Py_BuildValue(Name.c_str(), value);
-		PyDict_SetItemString(main_dict, Name.c_str(), i_obj);
-		Py_XDECREF(i_obj);
-		return true;
-	};
+	//bool SetVar(std::string Name, Table value) {
+	//	PyObject* i_obj;
+	//	i_obj = Py_BuildValue(Name.c_str(), value);
+	//	PyDict_SetItemString(main_dict, Name.c_str(), i_obj);
+	//	Py_XDECREF(i_obj);
+	//	return true;
+	//};
 
 	//TODO::
 	//bool RegisterLinkedVar(std::string Name, T* value);

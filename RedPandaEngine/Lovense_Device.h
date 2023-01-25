@@ -656,4 +656,53 @@ public:
 	std::map<std::string, Toy*> GetToys() {
 		return Toys;
 	}
+
+	void ConnectAll() {
+		for (auto& toy : Toys) {
+			toy.second->RequestConnect();
+		}
+	}
+	
+	void DisconnectAll() {
+		for (auto& toy : Toys) {
+			toy.second->RequestDisConnect();
+		}
+	}
+	
+	void UpdateAllToyInfo() {
+		for (auto& toy : Toys) {
+			toy.second->UpdateToyInfo();
+		}
+	}
+	
+	//vibrate all
+	void VibrateAll(int level) {
+		for (auto& toy : Toys) {
+			toy.second->RequestVibrate(level);
+		}
+	}
+	
+	//vibrate all for n seconds
+	void VibrateAll(int level, int seconds) {
+		for (auto& toy : Toys) {
+			toy.second->RequestVibrate(level);
+		}
+		std::this_thread::sleep_for(std::chrono::seconds(seconds));
+		for (auto& toy : Toys) {
+			toy.second->RequestVibrate(0);
+		}
+	}
+	//vibrate all for n seconds
+	void NonBlockingVibrateAll(int level, int seconds) {
+		for (auto& toy : Toys) {
+			toy.second->RequestVibrate(level);
+		}
+		std::thread([this, seconds]() {
+			std::this_thread::sleep_for(std::chrono::seconds(seconds));
+			for (auto& toy : Toys) {
+				toy.second->RequestVibrate(0);
+			}
+			}).detach();
+	}
+	
 };

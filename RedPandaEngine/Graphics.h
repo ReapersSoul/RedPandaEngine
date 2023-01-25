@@ -438,6 +438,11 @@ namespace Graphics {
                 Quad();
                 ~Quad();
             };
+            class Cube :public Mesh {
+            public:
+                Cube();
+                ~Cube();
+            };
         }
     }
 
