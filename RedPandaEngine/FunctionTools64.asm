@@ -10,14 +10,14 @@ FT_StartCall PROC
 	mov [StackPointer],rsp
 	ret
 FT_StartCall ENDP
-
+	
 FT_PushIntPointer PROC
 	pop ReturnPointer
 	push rcx
 	push ReturnPointer
 	ret
 FT_PushIntPointer ENDP
-
+    
 FT_CallFunction PROC
 	;save return address in Memory
 	pop ReturnPointer

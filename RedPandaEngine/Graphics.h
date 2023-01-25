@@ -8,12 +8,6 @@
 #include <string>
 #include <sstream>
 #include <thread>
-#ifndef FREE_NEHE_H
-#define FREE_NEHE_H
-#endif
-//FreeType Headers
-#include "TextRenderer.hpp"
-
 //gl
 #include <GL/glew.h>
 #include <GLM/glm.hpp>
@@ -28,8 +22,6 @@
 
 #include <iostream>
 #include <functional>
-#include "TextRenderer.hpp"
-#include "Math.h"
 
 namespace EventStream {
 
@@ -427,15 +419,15 @@ namespace Graphics {
     namespace MeshTools {
         class Mesh {
         protected:
-            std::vector<Math::Vec3<float>> Verts;
-            std::vector<Math::Vec2<int>> Edges;
-            std::vector<Math::Vec3<int>> TexCoOrd;
+            std::vector<glm::vec3> Verts;
+            std::vector<glm::vec2> Edges;
+            std::vector<glm::vec3> TexCoOrd;
             std::vector<std::vector<int>> Faces;
-            Math::Vec3<float> position,scale,rotation;
+            glm::vec3 position,scale,rotation;
             std::vector<TextureTools::Texture*> Textures;
 
 
-            std::vector<Math::Vec3<float>> ApplyTransform();
+            std::vector<glm::vec3> ApplyTransform();
         public:
             void Draw();
         };

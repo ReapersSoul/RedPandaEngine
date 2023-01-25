@@ -1,10 +1,10 @@
 #pragma once
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
-#include "Scripting_Language.h"
+#include "Language.h"
 
 
-class Python :public Scripting_Language {
+class Python :public Language {
 	PyObject* main_module, * main_dict;
 	PyObject* sys_module, * sys_dict;
 	PyObject* version_obj;
@@ -89,10 +89,9 @@ public:
 
 	bool SetVar(std::string Name, bool value) {
 		PyObject* i_obj;
-		//pytuppl
-		//i_obj = Py_BuildValue(Name.c_str(), value);
-		//PyDict_SetItemString(main_dict, Name.c_str(), i_obj);
-		//Py_XDECREF(i_obj);
+		i_obj = Py_BuildValue("b", value);
+		PyDict_SetItemString(main_dict, Name.c_str(), i_obj);
+		Py_XDECREF(i_obj);
 		return true;
 	};
 	bool SetVar(std::string Name, double value) {
@@ -148,6 +147,13 @@ public:
 	//TODO::
 	//bool RegisterLinkedVar(std::string Name, T* value);
 
+	bool GetVarAsBool(std::string Name)
+	{
+		PyObject* i_obj;
+		i_obj = PyDict_GetItemString(main_dict, Name.c_str());
+		int i = PyLong_AsLong(i_obj);
+		return i;
+	}
 
 	std::string GetVarAsString(std::string Name)
 	{
@@ -170,14 +176,6 @@ public:
 	{
 		PyObject* v = PyObject_GetAttrString(main_dict, Name.c_str());
 		int ret = PyLong_AsDouble(v);
-		Py_DECREF(v);
-		return ret;
-	}
-
-	bool GetVarAsBool(std::string Name)
-	{
-		PyObject* v = PyObject_GetAttrString(main_dict, Name.c_str());
-		bool ret = PyObject_IsTrue(v);
 		Py_DECREF(v);
 		return ret;
 	}

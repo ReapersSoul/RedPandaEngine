@@ -1,0 +1,19 @@
+{
+    "Names": {
+        "LVS-Calor32": "CALOR",
+        "LVS-Dolce23": "DOLCE",
+        "LVS-Nora240": "NORA",
+        "LVS-T32": "CALOR"
+    },
+    "Types": {
+        "C": {
+            "240": "NORA"
+        },
+        "J": {
+            "23": "DOLCE"
+        },
+        "T": {
+            "32": "CALOR"
+        }
+    }
+}

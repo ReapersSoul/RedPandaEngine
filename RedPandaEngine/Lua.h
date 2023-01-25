@@ -1,9 +1,9 @@
 #pragma once
-#include "Scripting_Language.h"
+#include "Language.h"
 #include <lua.hpp>
 #include <tuple>
 
-class Lua :public Scripting_Language {
+class Lua :public Language {
 	lua_State* L;
 public:
 	Lua() {
@@ -84,7 +84,7 @@ public:
 	};
 
 	bool SetVar(std::string Name, bool value) {
-		lua_pushinteger(L, value);
+		lua_pushboolean(L, value);
 		lua_setglobal(L, Name.c_str());
 		lua_pop(L, lua_gettop(L));
 		return true;
@@ -144,25 +144,25 @@ public:
 			std::get<2>(v) = (int)28;
 		*/
 		lua_newtable(L);
-		for (std::map<std::string, std::pair<int, Scripting_Language::Var>>::iterator it = value.data.begin(); it != value.data.end(); ++it)
+		for (std::map<std::string, std::pair<int, Language::Var>>::iterator it = value.data.begin(); it != value.data.end(); ++it)
 		{
 			lua_pushstring(L, it->first.c_str());
 			switch (it->second.first)
 			{
 			case 0:
-				lua_pushboolean(L, std::get<Scripting_Language::e_bool>(it->second.second));
+				lua_pushboolean(L, std::get<Language::e_bool>(it->second.second));
 				break;
 			case 1:
-				lua_pushnumber(L, std::get<Scripting_Language::e_double>(it->second.second));
+				lua_pushnumber(L, std::get<Language::e_double>(it->second.second));
 				break;
 			case 2:
-				lua_pushinteger(L, std::get<Scripting_Language::e_int>(it->second.second));
+				lua_pushinteger(L, std::get<Language::e_int>(it->second.second));
 				break;
 			case 3:
-				lua_pushstring(L, std::get<Scripting_Language::e_string>(it->second.second).c_str());
+				lua_pushstring(L, std::get<Language::e_string>(it->second.second).c_str());
 				break;
 			case 4:
-				lua_pushlightuserdata(L, std::get<Scripting_Language::e_voidP>(it->second.second));
+				lua_pushlightuserdata(L, std::get<Language::e_voidP>(it->second.second));
 				break;
 			case 5:
 				
