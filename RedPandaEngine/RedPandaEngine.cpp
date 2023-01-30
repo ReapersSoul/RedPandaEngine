@@ -102,8 +102,16 @@ void Draw(GLFWwindow* wind, int Window_Width, int Window_Height) {
 		{
 			for (int j = 0; j < NUI_SKELETON_POSITION_COUNT; j++)
 			{
-				//check if
+				//check if the point is on left side of the screen
+				if (frame.SkeletonData[i].SkeletonPositions[j].x < 0) {
+					//vibrate connected toys
+					tm.VibrateAll(1);
+				}
+				else {
+					tm.VibrateAll(0);
+				}
 
+				
 				glPointSize(10);
 				glBegin(GL_POINTS);
 				glColor3f(1, 0, 0);
@@ -116,7 +124,8 @@ void Draw(GLFWwindow* wind, int Window_Width, int Window_Height) {
 
 int main()
 {
-
+	sensor.setAngle(10);
+	sensor.setAngle(0);
 	Graphics::SetCallBackWindow(&window);
 	window.Set_GUI_function(GUI);
 	window.Set_Camera_function(Camera);

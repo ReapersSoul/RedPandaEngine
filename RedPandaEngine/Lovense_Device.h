@@ -684,29 +684,39 @@ public:
 	//vibrate all
 	void VibrateAll(int level) {
 		for (auto& toy : Toys) {
-			toy.second->RequestVibrate(level);
+			if (toy.second->GetConnected()){
+				toy.second->RequestVibrate(level);
+			}
 		}
 	}
 	
 	//vibrate all for n seconds
 	void VibrateAll(int level, int seconds) {
 		for (auto& toy : Toys) {
-			toy.second->RequestVibrate(level);
+			if (toy.second->GetConnected()) {
+				toy.second->RequestVibrate(level);
+			}
 		}
 		std::this_thread::sleep_for(std::chrono::seconds(seconds));
 		for (auto& toy : Toys) {
-			toy.second->RequestVibrate(0);
+			if (toy.second->GetConnected()) {
+				toy.second->RequestVibrate(0);
+			}
 		}
 	}
 	//vibrate all for n seconds
 	void NonBlockingVibrateAll(int level, int seconds) {
 		for (auto& toy : Toys) {
-			toy.second->RequestVibrate(level);
+			if (toy.second->GetConnected()) {
+				toy.second->RequestVibrate(level);
+			}
 		}
 		std::thread([this, seconds]() {
 			std::this_thread::sleep_for(std::chrono::seconds(seconds));
 			for (auto& toy : Toys) {
-				toy.second->RequestVibrate(0);
+				if (toy.second->GetConnected()) {
+					toy.second->RequestVibrate(0);
+				}
 			}
 			}).detach();
 	}
