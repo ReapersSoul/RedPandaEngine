@@ -40,7 +40,7 @@ std::string ParseToyType(std::string s) {
 	else {
 		data["Types"][token][id] = "";
 		std::ofstream o("ToyTypes.json");
-		o << data;
+		o<< std::setw(4) << data<<std::endl;
 		return "UNKNOWN";
 	}
 }
@@ -55,7 +55,7 @@ std::string ParseToyName(std::string s) {
 	else {
 		data["Names"][s] = "";
 		std::ofstream o("ToyTypes.json");
-		o << data;
+		o << std::setw(4) << data << std::endl;
 		return "UNKNOWN";
 	}
 }
@@ -574,7 +574,13 @@ public:
 	/*Call when toy searching toy*/
 	void LovenseSearchingToys(lovense_toy_info_t* info) {
 		Toy* toy = new Toy(toyManager,info);
-		Toys.insert(std::pair<std::string, Toy*>(toy->GetID(), toy));
+		if (Toys.find(toy->GetID())==Toys.end()) {
+			Toys.insert(std::pair<std::string, Toy*>(toy->GetID(), toy));
+		}
+		else {
+			Toys.erase(toy->GetID());
+			Toys.insert(std::pair<std::string, Toy*>(toy->GetID(), toy));
+		}
 	}
 
 	/*Call when Something went wrong*/

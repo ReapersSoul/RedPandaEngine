@@ -438,10 +438,26 @@ namespace Graphics {
                 Quad();
                 ~Quad();
             };
+			class Triangle :public Mesh {
+			public:
+				Triangle();
+				~Triangle();
+			};
+            
             class Cube :public Mesh {
             public:
                 Cube();
                 ~Cube();
+            };
+			class Pyramid :public Mesh {
+			public:
+				Pyramid();
+				~Pyramid();
+			};
+            class Sphere :public Mesh {
+            public:
+                Sphere();
+                ~Sphere();
             };
         }
     }

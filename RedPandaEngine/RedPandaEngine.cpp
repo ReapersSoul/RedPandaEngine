@@ -8,6 +8,7 @@
 //#include "Python.h"
 //#include "Language_Manager.h"
 #include "Lovense_Device.h"
+#include "Kinect.h"
 
 ToyManager tm;
 
@@ -18,6 +19,8 @@ int level = 0;
 int seconds=0;
 char buff[255] = { 0 };
 char buff2[255]={0};
+
+Kinect::Sensor sensor;
 
 //draw functions
 void GUI(GLFWwindow* wind, int Window_Width, int Window_Height) {
@@ -83,16 +86,37 @@ void Camera(GLFWwindow* wind, int Window_Width, int Window_Height) {
 }
 
 void Draw(GLFWwindow* wind, int Window_Width, int Window_Height) {
-    //DRAW CALL
-	Graphics::MeshTools::Shapes::Cube quad;
-	//pink
-	glColor3d(1, .65, .65);
-	glScaled(.5, .5, .5);
-	quad.Draw();
+	//draw cube in top right
+	glPushMatrix();
+	glColor3f(1, 0, 0);
+	Graphics::MeshTools::Shapes::Cube cube;
+	cube.Draw();
+	glPopMatrix();
+	
+	
+    //get Skeleton and draw
+	NUI_SKELETON_FRAME  frame = sensor.getSkeletonFrame();
+	for (int i = 0; i < NUI_SKELETON_COUNT; i++)
+	{
+		if (frame.SkeletonData[i].eTrackingState == NUI_SKELETON_TRACKED)
+		{
+			for (int j = 0; j < NUI_SKELETON_POSITION_COUNT; j++)
+			{
+				//check if
+
+				glPointSize(10);
+				glBegin(GL_POINTS);
+				glColor3f(1, 0, 0);
+				glVertex3f(frame.SkeletonData[i].SkeletonPositions[j].x, frame.SkeletonData[i].SkeletonPositions[j].y, frame.SkeletonData[i].SkeletonPositions[j].z);
+				glEnd();
+			}
+		}
+	}
 }
 
 int main()
 {
+
 	Graphics::SetCallBackWindow(&window);
 	window.Set_GUI_function(GUI);
 	window.Set_Camera_function(Camera);
