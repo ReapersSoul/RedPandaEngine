@@ -25,12 +25,27 @@
     <Filter Include="Header Files\Scripting Languages">
       <UniqueIdentifier>{cc3ef2f2-4373-4872-9fee-3bf9de151ec8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Assembly">
+      <UniqueIdentifier>{4e99f3a4-637b-4969-94bd-1fd8f8c5308e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\FunctionTools">
+      <UniqueIdentifier>{570e6546-4cfc-419b-82a5-fb4d6e6b629c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Scripting Languages\Compiled">
+      <UniqueIdentifier>{9c4bbf7f-3dfa-4f12-ac52-9dc7f319f058}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Scripting Languages\VM">
+      <UniqueIdentifier>{699e7275-3510-4653-9f9d-1bab3b4d9e3d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Scripting Languages\Language Manager">
+      <UniqueIdentifier>{d4c24247-54a6-4697-b31d-83dbcebf01d0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Scripting Languages\Language Bases">
+      <UniqueIdentifier>{b3da00be-37e7-4e21-98e3-cd1611e1419b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RedPandaEngine.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="TextRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="util.cpp">
@@ -65,9 +80,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="TextRenderer.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="util.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -110,35 +122,51 @@
     <ClInclude Include="DEVICE.h">
       <Filter>Header Files\DEVICES</Filter>
     </ClInclude>
-    <ClInclude Include="Math.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Graphics.h">
       <Filter>Header Files\Graphics</Filter>
     </ClInclude>
-    <ClInclude Include="Physics.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Scripting_Language.h">
-      <Filter>Header Files\Scripting Languages</Filter>
-    </ClInclude>
-    <ClInclude Include="Java.h">
-      <Filter>Header Files\Scripting Languages</Filter>
-    </ClInclude>
-    <ClInclude Include="CSharp.h">
-      <Filter>Header Files\Scripting Languages</Filter>
+    <ClInclude Include="FunctionTools.h">
+      <Filter>Header Files\FunctionTools</Filter>
     </ClInclude>
     <ClInclude Include="Lua.h">
-      <Filter>Header Files\Scripting Languages</Filter>
+      <Filter>Header Files\Scripting Languages\VM</Filter>
     </ClInclude>
     <ClInclude Include="Python.h">
-      <Filter>Header Files\Scripting Languages</Filter>
+      <Filter>Header Files\Scripting Languages\VM</Filter>
     </ClInclude>
     <ClInclude Include="Native.h">
-      <Filter>Header Files\Scripting Languages</Filter>
+      <Filter>Header Files\Scripting Languages\Compiled</Filter>
     </ClInclude>
-    <ClInclude Include="Scripting_Language_Manager.h">
-      <Filter>Header Files\Scripting Languages</Filter>
+    <ClInclude Include="CSharp.h">
+      <Filter>Header Files\Scripting Languages\Compiled</Filter>
     </ClInclude>
+    <ClInclude Include="Java.h">
+      <Filter>Header Files\Scripting Languages\Compiled</Filter>
+    </ClInclude>
+    <ClInclude Include="Language_Manager.h">
+      <Filter>Header Files\Scripting Languages\Language Manager</Filter>
+    </ClInclude>
+    <ClInclude Include="Language.h">
+      <Filter>Header Files\Scripting Languages\Language Bases</Filter>
+    </ClInclude>
+    <ClInclude Include="CompiledLanguage.h">
+      <Filter>Header Files\Scripting Languages\Language Bases</Filter>
+    </ClInclude>
+    <ClInclude Include="VirtualMachineLanguage.h">
+      <Filter>Header Files\Scripting Languages\Language Bases</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <MASM Include="FunctionTools64.asm">
+      <Filter>Assembly</Filter>
+    </MASM>
+    <MASM Include="FunctionTools86.asm">
+      <Filter>Assembly</Filter>
+    </MASM>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ToyTypes.json">
+      <Filter>Source Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

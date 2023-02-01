@@ -54,6 +54,7 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.props" />
   </ImportGroup>
   <ImportGroup Label="Shared">
   </ImportGroup>
@@ -152,12 +153,13 @@
     <ClCompile Include="G:\SDKs\imgui\imgui_widgets.cpp" />
     <ClCompile Include="Graphics.cpp" />
     <ClCompile Include="RedPandaEngine.cpp" />
-    <ClCompile Include="TextRenderer.cpp" />
     <ClCompile Include="util.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CompiledLanguage.h" />
     <ClInclude Include="CSharp.h" />
     <ClInclude Include="DEVICE.h" />
+    <ClInclude Include="FunctionTools.h" />
     <ClInclude Include="G:\SDKs\imgui\backends\imgui_impl_glfw.h" />
     <ClInclude Include="G:\SDKs\imgui\backends\imgui_impl_opengl2.h" />
     <ClInclude Include="G:\SDKs\imgui\backends\imgui_impl_opengl3.h" />
@@ -173,16 +175,29 @@
     <ClInclude Include="Kinect.h" />
     <ClInclude Include="Lovense_Device.h" />
     <ClInclude Include="Lua.h" />
-    <ClInclude Include="Math.h" />
     <ClInclude Include="Native.h" />
-    <ClInclude Include="Physics.h" />
     <ClInclude Include="Python.h" />
-    <ClInclude Include="Scripting_Language_Manager.h" />
-    <ClInclude Include="Scripting_Language.h" />
-    <ClInclude Include="TextRenderer.hpp" />
+    <ClInclude Include="Language_Manager.h" />
+    <ClInclude Include="Language.h" />
     <ClInclude Include="util.h" />
+    <ClInclude Include="VirtualMachineLanguage.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <MASM Include="FunctionTools64.asm" />
+    <MASM Include="FunctionTools86.asm">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </MASM>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ToyTypes.json" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.targets" />
   </ImportGroup>
+  <ProjectExtensions>
+    <VisualStudio>
+      <UserProperties ToyTypes_1json__JsonSchema="https://appliedengdesign.github.io/cnccodes-json-schema/draft/2022-07/schema" />
+    </VisualStudio>
+  </ProjectExtensions>
 </Project>

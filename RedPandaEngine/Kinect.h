@@ -1,387 +1,294 @@
 #pragma once
+#include <windows.h>
 //kinect
 #include <NuiApi.h>
 #include <NuiSkeleton.h>
-#include <NuiSensor.h>
 #include <NuiImageCamera.h>
+#include <NuiSensor.h>
+#include <glm/glm.hpp>
+#include <vector>
+#include "util.h"
 
 namespace Kinect {
-	struct Joint {
-		Joint(double x, double y, double z, double w) {
-			this->x = x;
-			this->y = y;
-			this->z = z;
-			this->w = w;
+	class Bone {
+		glm::vec3 position;
+		glm::vec3 rotation;
+		glm::vec3 scale;
+	};
+	class Skeleton {
+		glm::vec4 joints[20];
+		Bone bones[19];
+	public:
+		void Update(NUI_SKELETON_DATA data) {
+			for (int i = 0; i < NUI_SKELETON_POSITION_COUNT; i++)
+			{
+				joints[i] = glm::vec4(data.SkeletonPositions[i].x, data.SkeletonPositions[i].y, data.SkeletonPositions[i].z, data.SkeletonPositions[i].w);
+			}
 		}
-		Joint(double x) {
-			this->x = x;
-			this->y = x;
-			this->z = x;
-			this->w = w;
-		}
-		Joint() {
-			x = 0;
-			y = 0;
-			z = 0;
-			w = 0;
-		}
-
-		double x, y, z, w;
-
-		void Normalize() {
-			double tmp = x + y + z + w;
-
-			x = x / tmp;
-			y = y / tmp;
-			z = z / tmp;
-			w = w / tmp;
-		}
-		Joint Normalized() {
-			double tmp = x + y + z + w;
-			Joint ret;
-			ret.x = x / tmp;
-			ret.y = y / tmp;
-			ret.z = z / tmp;
-			ret.w = w / tmp;
-			return ret;
+		glm::vec4 GetJoint(int i) {
+			return joints[i];
 		}
 
-		Joint operator+ (Joint v) {
-			Joint ret;
-			ret.x = this->x + v.x;
-			ret.y = this->y + v.y;
-			ret.z = this->z + v.z;
-			ret.w = this->w + v.w;
-			return ret;
-		}
-		Joint operator- (Joint v) {
-			Joint ret;
-			ret.x = this->x - v.x;
-			ret.y = this->y - v.y;
-			ret.z = this->z - v.z;
-			ret.w = this->w - v.w;
-			return ret;
-		}
-		Joint operator- () {
-			x = -x;
-			y = -y;
-			z = -z;
-			w = -w;
-			return *this;
-		}
-		Joint operator* (Joint v) {
-			Joint ret;
-			ret.x = this->x * v.x;
-			ret.y = this->y * v.y;
-			ret.z = this->z * v.z;
-			ret.w = this->w * v.w;
-			return ret;
-		}
-		template <typename O>
-		Joint operator/ (O v) {
-			Joint ret;
-			ret.x = this->x / v;
-			ret.y = this->y / v;
-			ret.z = this->z / v;
-			ret.w = this->w / v;
-			return ret;
-		}
-		template <typename O>
-		Joint operator* (O v) {
-			Joint ret;
-			ret.x = this->x * v;
-			ret.y = this->y * v;
-			ret.z = this->z * v;
-			ret.w = this->w * v;
-			return ret;
-		}
-		template <typename O>
-		Joint operator+ (O v) {
-			Joint ret;
-			ret.x = this->x + v;
-			ret.y = this->y + v;
-			ret.z = this->z + v;
-			ret.w = this->w + v;
-			return ret;
-		}
-		template <typename O>
-		Joint operator- (O v) {
-			Joint ret;
-			ret.x = this->x - v;
-			ret.y = this->y - v;
-			ret.z = this->z - v;
-			ret.w = this->w - v;
-			return ret;
+		void DrawJoints(float PointSize,std::function<glm::vec4(glm::vec4 point)> call) {
+			glPointSize(PointSize);
+			glBegin(GL_POINTS);
+			bool vib = false;
+			for (int j = 0; j < NUI_SKELETON_POSITION_COUNT; j++)
+			{
+				glm::vec4 point = call(joints[j]);
+				glVertex3f(point.x, point.y, point.z);
+			}
+			glEnd();
 		}
 
-		Joint negate() {
-			Joint v = *this;
-			v.x = -v.x;
-			v.y = -v.y;
-			v.z = -v.z;
-			v.w = -v.w;
-			return v;
+		void DrawBones(float LineWidth,std::function<Bone(Bone)> call) {
+
 		}
 	};
 
-	struct Bone {
-		Joint Start;
-		Joint End;
-		void Update(Joint s, Joint e) {
-			Start = s; End = e;
-		}
-		Joint Normalize() {
-			Joint ret = End - Start;
-			//ret = ret.Normalize();
-			return ret.negate();
-		}
-	};
+	//a abstraction of the Kinect SDK's sensor
+	class Sensor {
+		INuiSensor* sensor;
+		HANDLE colorStream, depthStream;
+		NUI_SKELETON_FRAME skeletonFrame;
+		NUI_IMAGE_FRAME colorFrame, depthFrame;
+		HANDLE NextColorFrameEvent, NextDepthFrameEvent;
+	public:
+		//constructor		
+		Sensor() {
+			//get the sensor and check if successful
+			int numSensors = 0;
+			NuiGetSensorCount(&numSensors);
+			if (numSensors == 0) {
+				PLOGE_(Util::Logs::Error) << "No Kinect Sensor Found";
+				throw "No Kinect Sensor Found";
+			}
+			NuiCreateSensorByIndex(0, &sensor);
+			//initialize the sensor
+			sensor->NuiInitialize(NUI_INITIALIZE_FLAG_USES_SKELETON | NUI_INITIALIZE_FLAG_USES_COLOR | NUI_INITIALIZE_FLAG_USES_DEPTH | NUI_INITIALIZE_FLAG_USES_AUDIO | NUI_INITIALIZE_FLAG_USES_DEPTH_AND_PLAYER_INDEX | NUI_INITIALIZE_FLAG_USES_HIGH_QUALITY_COLOR);
+			//open the sensor
+			NextColorFrameEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+			sensor->NuiImageStreamOpen(NUI_IMAGE_TYPE_COLOR,NUI_IMAGE_RESOLUTION_1280x960,0,2,NextColorFrameEvent,&colorStream);
+			NextDepthFrameEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
 
-	typedef Joint BoneNormal;
-
-	struct Skelly {
-		bool Tracked = false;
-		Joint HandL;
-		Joint HandR;
-		Joint WristL;
-		Joint WristR;
-		Joint ElbowL;
-		Joint ElbowR;
-		Joint ShoulderL;
-		Joint ShoulderR;
-		Joint ShoulderC;
-		Joint Spine;
-		Joint HipL;
-		Joint HipR;
-		Joint HipC;
-		Joint KneeL;
-		Joint KneeR;
-		Joint AnkleL;
-		Joint AnkleR;
-		Joint FootL;
-		Joint FootR;
-		Joint Head;
-		Bone WristHandL;
-		Bone WristHandR;
-		Bone ElbowWristL;
-		Bone ElbowWristR;
-		Bone ShoulderElbowL;
-		Bone ShoulderElbowR;
-		Bone ShoulderCShoulderL;
-		Bone ShoulderCShoulderR;
-		Bone ShoulderCHead;
-		Bone SpineShoulderC;
-		Bone SpineHipC;
-		Bone HipCHipL;
-		Bone HipCHipR;
-		Bone HipKneeL;
-		Bone HipKneeR;
-		Bone KneeAnkleL;
-		Bone KneeAnkleR;
-		Bone AnkleFootL;
-		Bone AnkleFootR;
-		BoneNormal WristHandL_Normal;
-		BoneNormal WristHandR_Normal;
-		BoneNormal ElbowWristL_Normal;
-		BoneNormal ElbowWristR_Normal;
-		BoneNormal ShoulderElbowL_Normal;
-		BoneNormal ShoulderElbowR_Normal;
-		BoneNormal ShoulderCShoulderL_Normal;
-		BoneNormal ShoulderCShoulderR_Normal;
-		BoneNormal ShoulderCHead_Normal;
-		BoneNormal SpineShoulderC_Normal;
-		BoneNormal SpineHipC_Normal;
-		BoneNormal HipCHipL_Normal;
-		BoneNormal HipCHipR_Normal;
-		BoneNormal HipKneeL_Normal;
-		BoneNormal HipKneeR_Normal;
-		BoneNormal KneeAnkleL_Normal;
-		BoneNormal KneeAnkleR_Normal;
-		BoneNormal AnkleFootL_Normal;
-		BoneNormal AnkleFootR_Normal;
-
-		Bone* GetBonesArray() {
-			Bone ret[19];
-			ret[0] = WristHandL;
-			ret[1] = WristHandR;
-			ret[2] = ElbowWristL;
-			ret[3] = ElbowWristR;
-			ret[4] = ShoulderElbowL;
-			ret[5] = ShoulderElbowR;
-			ret[6] = ShoulderCShoulderL;
-			ret[7] = ShoulderCShoulderR;
-			ret[8] = ShoulderCHead;
-			ret[9] = SpineShoulderC;
-			ret[10] = SpineHipC;
-			ret[11] = HipCHipL;
-			ret[12] = HipCHipR;
-			ret[13] = HipKneeL;
-			ret[14] = HipKneeR;
-			ret[15] = KneeAnkleL;
-			ret[16] = KneeAnkleR;
-			ret[17] = AnkleFootL;
-			ret[18] = AnkleFootR;
-			return ret;
-		}
-		Joint* GetJointsArray() {
-			Joint ret[20];
-			ret[0] = HandL;
-			ret[1] = HandR;
-			ret[2] = WristL;
-			ret[3] = WristR;
-			ret[4] = ElbowL;
-			ret[5] = ElbowR;
-			ret[6] = ShoulderL;
-			ret[7] = ShoulderR;
-			ret[8] = ShoulderC;
-			ret[9] = HipL;
-			ret[10] = HipR;
-			ret[11] = HipC;
-			ret[12] = KneeL;
-			ret[13] = KneeR;
-			ret[14] = AnkleL;
-			ret[15] = AnkleR;
-			ret[16] = FootL;
-			ret[17] = FootR;
-			ret[18] = Spine;
-			ret[19] = Head;
-			return ret;
+			// Open a depth image stream to receive depth frames
+			HRESULT hr=sensor->NuiImageStreamOpen(
+				NUI_IMAGE_TYPE_DEPTH,
+				NUI_IMAGE_RESOLUTION_640x480,
+				0,
+				2,
+				NextDepthFrameEvent,
+				&depthStream);
+			sensor->NuiSkeletonTrackingEnable(NULL, 0);
+			sensor->NuiCameraElevationSetAngle(0);
 		}
 
-		void UpdateSkelly(NUI_SKELETON_DATA& data) {
-			//joints
-			HandL = Joint(data.SkeletonPositions[NUI_SKELETON_POSITION_HAND_LEFT].x, data.SkeletonPositions[NUI_SKELETON_POSITION_HAND_LEFT].y, data.SkeletonPositions[NUI_SKELETON_POSITION_HAND_LEFT].z, data.SkeletonPositions[NUI_SKELETON_POSITION_HAND_LEFT].w);
-			HandR = Joint(data.SkeletonPositions[NUI_SKELETON_POSITION_HAND_RIGHT].x, data.SkeletonPositions[NUI_SKELETON_POSITION_HAND_RIGHT].y, data.SkeletonPositions[NUI_SKELETON_POSITION_HAND_RIGHT].z, data.SkeletonPositions[NUI_SKELETON_POSITION_HAND_RIGHT].w);
-			WristL = Joint(data.SkeletonPositions[NUI_SKELETON_POSITION_WRIST_LEFT].x, data.SkeletonPositions[NUI_SKELETON_POSITION_WRIST_LEFT].y, data.SkeletonPositions[NUI_SKELETON_POSITION_WRIST_LEFT].z, data.SkeletonPositions[NUI_SKELETON_POSITION_WRIST_LEFT].w);
-			WristR = Joint(data.SkeletonPositions[NUI_SKELETON_POSITION_WRIST_RIGHT].x, data.SkeletonPositions[NUI_SKELETON_POSITION_WRIST_RIGHT].y, data.SkeletonPositions[NUI_SKELETON_POSITION_WRIST_RIGHT].z, data.SkeletonPositions[NUI_SKELETON_POSITION_WRIST_RIGHT].w);
-			ElbowL = Joint(data.SkeletonPositions[NUI_SKELETON_POSITION_ELBOW_LEFT].x, data.SkeletonPositions[NUI_SKELETON_POSITION_ELBOW_LEFT].y, data.SkeletonPositions[NUI_SKELETON_POSITION_ELBOW_LEFT].z, data.SkeletonPositions[NUI_SKELETON_POSITION_ELBOW_LEFT].w);
-			ElbowR = Joint(data.SkeletonPositions[NUI_SKELETON_POSITION_ELBOW_RIGHT].x, data.SkeletonPositions[NUI_SKELETON_POSITION_ELBOW_RIGHT].y, data.SkeletonPositions[NUI_SKELETON_POSITION_ELBOW_RIGHT].z, data.SkeletonPositions[NUI_SKELETON_POSITION_ELBOW_RIGHT].w);
-			ShoulderL = Joint(data.SkeletonPositions[NUI_SKELETON_POSITION_SHOULDER_LEFT].x, data.SkeletonPositions[NUI_SKELETON_POSITION_SHOULDER_LEFT].y, data.SkeletonPositions[NUI_SKELETON_POSITION_SHOULDER_LEFT].z, data.SkeletonPositions[NUI_SKELETON_POSITION_SHOULDER_LEFT].w);
-			ShoulderR = Joint(data.SkeletonPositions[NUI_SKELETON_POSITION_SHOULDER_RIGHT].x, data.SkeletonPositions[NUI_SKELETON_POSITION_SHOULDER_RIGHT].y, data.SkeletonPositions[NUI_SKELETON_POSITION_SHOULDER_RIGHT].z, data.SkeletonPositions[NUI_SKELETON_POSITION_SHOULDER_RIGHT].w);
-			ShoulderC = Joint(data.SkeletonPositions[NUI_SKELETON_POSITION_SHOULDER_CENTER].x, data.SkeletonPositions[NUI_SKELETON_POSITION_SHOULDER_CENTER].y, data.SkeletonPositions[NUI_SKELETON_POSITION_SHOULDER_CENTER].z, data.SkeletonPositions[NUI_SKELETON_POSITION_SHOULDER_CENTER].w);
-			Spine = Joint(data.SkeletonPositions[NUI_SKELETON_POSITION_SPINE].x, data.SkeletonPositions[NUI_SKELETON_POSITION_SPINE].y, data.SkeletonPositions[NUI_SKELETON_POSITION_SPINE].z, data.SkeletonPositions[NUI_SKELETON_POSITION_SPINE].w);
-			HipL = Joint(data.SkeletonPositions[NUI_SKELETON_POSITION_HIP_LEFT].x, data.SkeletonPositions[NUI_SKELETON_POSITION_HIP_LEFT].y, data.SkeletonPositions[NUI_SKELETON_POSITION_HIP_LEFT].z, data.SkeletonPositions[NUI_SKELETON_POSITION_HIP_LEFT].w);
-			HipR = Joint(data.SkeletonPositions[NUI_SKELETON_POSITION_HIP_RIGHT].x, data.SkeletonPositions[NUI_SKELETON_POSITION_HIP_RIGHT].y, data.SkeletonPositions[NUI_SKELETON_POSITION_HIP_RIGHT].z, data.SkeletonPositions[NUI_SKELETON_POSITION_HIP_RIGHT].w);
-			HipC = Joint(data.SkeletonPositions[NUI_SKELETON_POSITION_HIP_CENTER].x, data.SkeletonPositions[NUI_SKELETON_POSITION_HIP_CENTER].y, data.SkeletonPositions[NUI_SKELETON_POSITION_HIP_CENTER].z, data.SkeletonPositions[NUI_SKELETON_POSITION_HIP_CENTER].w);
-			KneeL = Joint(data.SkeletonPositions[NUI_SKELETON_POSITION_KNEE_LEFT].x, data.SkeletonPositions[NUI_SKELETON_POSITION_KNEE_LEFT].y, data.SkeletonPositions[NUI_SKELETON_POSITION_KNEE_LEFT].z, data.SkeletonPositions[NUI_SKELETON_POSITION_KNEE_LEFT].w);
-			KneeR = Joint(data.SkeletonPositions[NUI_SKELETON_POSITION_KNEE_RIGHT].x, data.SkeletonPositions[NUI_SKELETON_POSITION_KNEE_RIGHT].y, data.SkeletonPositions[NUI_SKELETON_POSITION_KNEE_RIGHT].z, data.SkeletonPositions[NUI_SKELETON_POSITION_KNEE_RIGHT].w);
-			AnkleL = Joint(data.SkeletonPositions[NUI_SKELETON_POSITION_ANKLE_LEFT].x, data.SkeletonPositions[NUI_SKELETON_POSITION_ANKLE_LEFT].y, data.SkeletonPositions[NUI_SKELETON_POSITION_ANKLE_LEFT].z, data.SkeletonPositions[NUI_SKELETON_POSITION_ANKLE_LEFT].w);
-			AnkleR = Joint(data.SkeletonPositions[NUI_SKELETON_POSITION_ANKLE_RIGHT].x, data.SkeletonPositions[NUI_SKELETON_POSITION_ANKLE_RIGHT].y, data.SkeletonPositions[NUI_SKELETON_POSITION_ANKLE_RIGHT].z, data.SkeletonPositions[NUI_SKELETON_POSITION_ANKLE_RIGHT].w);
-			FootL = Joint(data.SkeletonPositions[NUI_SKELETON_POSITION_FOOT_LEFT].x, data.SkeletonPositions[NUI_SKELETON_POSITION_FOOT_LEFT].y, data.SkeletonPositions[NUI_SKELETON_POSITION_FOOT_LEFT].z, data.SkeletonPositions[NUI_SKELETON_POSITION_FOOT_LEFT].w);
-			FootR = Joint(data.SkeletonPositions[NUI_SKELETON_POSITION_FOOT_RIGHT].x, data.SkeletonPositions[NUI_SKELETON_POSITION_FOOT_RIGHT].y, data.SkeletonPositions[NUI_SKELETON_POSITION_FOOT_RIGHT].z, data.SkeletonPositions[NUI_SKELETON_POSITION_FOOT_RIGHT].w);
-			Head = Joint(data.SkeletonPositions[NUI_SKELETON_POSITION_HEAD].x, data.SkeletonPositions[NUI_SKELETON_POSITION_HEAD].y, data.SkeletonPositions[NUI_SKELETON_POSITION_HEAD].z, data.SkeletonPositions[NUI_SKELETON_POSITION_HEAD].w);
-			//bones
-			WristHandL.Update(WristL, HandL);
-			WristHandR.Update(WristR, HandR);
-			ElbowWristL.Update(ElbowL, WristL);
-			ElbowWristR.Update(ElbowR, WristR);
-			ShoulderElbowL.Update(ShoulderL, ElbowL);
-			ShoulderElbowR.Update(ShoulderR, ElbowR);
-			ShoulderCShoulderL.Update(ShoulderC, ShoulderL);
-			ShoulderCShoulderR.Update(ShoulderC, ShoulderR);
-			ShoulderCHead.Update(ShoulderC, Head);
-			SpineShoulderC.Update(Spine, ShoulderC);
-			SpineHipC.Update(Spine, HipC);
-			HipCHipL.Update(HipC, HipL);
-			HipCHipR.Update(HipC, HipR);
-			HipKneeL.Update(HipL, KneeL);
-			HipKneeR.Update(HipR, KneeR);
-			KneeAnkleL.Update(KneeL, AnkleL);
-			KneeAnkleR.Update(KneeR, AnkleR);
-			AnkleFootL.Update(AnkleL, FootL);
-			AnkleFootR.Update(AnkleR, FootR);
-			//bone direction/normal
-			WristHandL_Normal = WristHandL.Normalize();
-			WristHandR_Normal = WristHandR.Normalize();
-			ElbowWristL_Normal = ElbowWristL.Normalize();
-			ElbowWristR_Normal = ElbowWristR.Normalize();
-			ShoulderElbowL_Normal = ShoulderElbowL.Normalize();
-			ShoulderElbowR_Normal = ShoulderElbowR.Normalize();
-			ShoulderCShoulderL_Normal = ShoulderCShoulderL.Normalize();
-			ShoulderCShoulderR_Normal = ShoulderCShoulderR.Normalize();
-			ShoulderCHead_Normal = ShoulderCHead.Normalize();
-			SpineShoulderC_Normal = SpineShoulderC.Normalize();
-			SpineHipC_Normal = SpineHipC.Normalize();
-			HipCHipL_Normal = HipCHipL.Normalize();
-			HipCHipR_Normal = HipCHipR.Normalize();
-			HipKneeL_Normal = HipKneeL.Normalize();
-			HipKneeR_Normal = HipKneeR.Normalize();
-			KneeAnkleL_Normal = KneeAnkleL.Normalize();
-			KneeAnkleR_Normal = KneeAnkleR.Normalize();
-			AnkleFootL_Normal = AnkleFootL.Normalize();
-			AnkleFootR_Normal = AnkleFootR.Normalize();
-		}
-	};
-
-	NUI_SKELETON_FRAME ourframe;
-	Skelly People[6];
-	INuiSensor * Sensor;
-	HANDLE                  m_hNextSkeletonEvent;
-
-
-	bool Init() {
-		INuiSensor* pNuiSensor;
-
-		int iSensorCount = 0;
-		HRESULT hr = NuiGetSensorCount(&iSensorCount);
-		if (FAILED(hr))
-		{
-			return hr;
+		//destructor
+		~Sensor() {
+			sensor->NuiShutdown();
 		}
 
-		// Look at each Kinect sensor
-		for (int i = 0; i < iSensorCount; ++i)
-		{
-			// Create the sensor so we can check status, if we can't create it, move on to the next
-			hr = NuiCreateSensorByIndex(i, &pNuiSensor);
+		//get the color frame
+		void getColorFrame(std::function<void(void * frame,int size)> useFrame) {
+			HRESULT hr;
+			NUI_IMAGE_FRAME imageFrame;
+
+			if (WAIT_OBJECT_0 == WaitForSingleObject(NextColorFrameEvent, 0))
+			{
+				// Attempt to get the color frame
+				hr = sensor->NuiImageStreamGetNextFrame(colorStream, 0, &imageFrame);
+				if (FAILED(hr))
+				{
+					return;
+				}
+
+				INuiFrameTexture* pTexture = imageFrame.pFrameTexture;
+				NUI_LOCKED_RECT LockedRect;
+
+				// Lock the frame data so the Kinect knows not to modify it while we're reading it
+				pTexture->LockRect(0, &LockedRect, NULL, 0);
+
+				// Make sure we've received valid data
+				if (LockedRect.Pitch != 0)
+				{
+					useFrame((void*)LockedRect.pBits, LockedRect.size);
+				}
+
+				// We're done with the texture so unlock it
+				pTexture->UnlockRect(0);
+
+				// Release the frame
+				sensor->NuiImageStreamReleaseFrame(colorStream, &imageFrame);
+			}
+		}
+
+		//get the depth frame
+		void getDepthFrame(std::function<void(void* frame, int size)> useFrame) {
+			HRESULT hr;
+			NUI_IMAGE_FRAME imageFrame;
+			void* depthRGBX = malloc(640* 480 * 4);
+
+			// Attempt to get the depth frame
+			hr = sensor->NuiImageStreamGetNextFrame(depthStream, 0, &imageFrame);
 			if (FAILED(hr))
 			{
-				continue;
+				delete depthRGBX;
+				return;
 			}
 
-			// Get the status of the sensor, and if connected, then we can initialize it
-			hr = pNuiSensor->NuiStatus();
-			if (S_OK == hr)
+			BOOL nearMode;
+			INuiFrameTexture* pTexture;
+			// Get the depth image pixel texture
+			hr = sensor->NuiImageFrameGetDepthImagePixelFrameTexture(depthStream, &imageFrame, &nearMode, &pTexture);
+			if (FAILED(hr))
 			{
-				Sensor = pNuiSensor;
-				break;
+				goto ReleaseFrame;
 			}
 
-			// This sensor wasn't OK, so release it since we're not using it
-			pNuiSensor->Release();
-		}
+			NUI_LOCKED_RECT LockedRect;
 
-		if (NULL != Sensor)
-		{
-			// Initialize the Kinect and specify that we'll be using skeleton
-			hr = Sensor->NuiInitialize(NUI_INITIALIZE_FLAG_USES_SKELETON);
-			if (SUCCEEDED(hr))
+			// Lock the frame data so the Kinect knows not to modify it while we're reading it
+			pTexture->LockRect(0, &LockedRect, NULL, 0);
+
+			// Make sure we've received valid data
+			if (LockedRect.Pitch != 0)
 			{
-				// Create an event that will be signaled when skeleton data is available
-				m_hNextSkeletonEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
+				// Get the min and max reliable depth for the current frame
+				int minDepth = (nearMode ? NUI_IMAGE_DEPTH_MINIMUM_NEAR_MODE : NUI_IMAGE_DEPTH_MINIMUM) >> NUI_IMAGE_PLAYER_INDEX_SHIFT;
+				int maxDepth = (nearMode ? NUI_IMAGE_DEPTH_MAXIMUM_NEAR_MODE : NUI_IMAGE_DEPTH_MAXIMUM) >> NUI_IMAGE_PLAYER_INDEX_SHIFT;
 
-				// Open a skeleton stream to receive skeleton data
-				hr = Sensor->NuiSkeletonTrackingEnable(m_hNextSkeletonEvent, 0);
+				BYTE* rgbrun = (BYTE*)depthRGBX;
+				const NUI_DEPTH_IMAGE_PIXEL* pBufferRun = reinterpret_cast<const NUI_DEPTH_IMAGE_PIXEL*>(LockedRect.pBits);
+
+				// end pixel is start + width*height - 1
+				const NUI_DEPTH_IMAGE_PIXEL* pBufferEnd = pBufferRun + (640* 480);
+
+				while (pBufferRun < pBufferEnd)
+				{
+					// discard the portion of the depth that contains only the player index
+					USHORT depth = pBufferRun->depth;
+
+					// To convert to a byte, we're discarding the most-significant
+					// rather than least-significant bits.
+					// We're preserving detail, although the intensity will "wrap."
+					// Values outside the reliable depth range are mapped to 0 (black).
+
+					// Note: Using conditionals in this loop could degrade performance.
+					// Consider using a lookup table instead when writing production code.
+					BYTE intensity = static_cast<BYTE>(depth >= minDepth && depth <= maxDepth ? depth % 256 : 0);
+
+					// Write out blue byte
+					*(rgbrun++) = intensity;
+
+					// Write out green byte
+					*(rgbrun++) = intensity;
+
+					// Write out red byte
+					*(rgbrun++) = intensity;
+
+					// We're outputting BGR, the last byte in the 32 bits is unused so skip it
+					// If we were outputting BGRA, we would write alpha here.
+					++rgbrun;
+
+					// Increment our index into the Kinect's depth buffer
+					++pBufferRun;
+				}
+
+				// Draw the data with Direct2D
+				useFrame(depthRGBX, 640* 480 * 4);
+			}
+
+			// We're done with the texture so unlock it
+			pTexture->UnlockRect(0);
+
+			pTexture->Release();
+
+		ReleaseFrame:
+			// Release the frame
+			delete depthRGBX;
+			sensor->NuiImageStreamReleaseFrame(depthStream, &imageFrame);
+		}
+
+		//get the skeleton frame
+		NUI_SKELETON_FRAME getSkeletonFrame() {
+			sensor->NuiSkeletonGetNextFrame(0, &skeletonFrame);
+			return skeletonFrame;
+		}
+
+		//get skeleton
+		NUI_SKELETON_DATA getSkeleton(int i) {
+			return skeletonFrame.SkeletonData[i];
+		}
+
+		void DrawBone(int i, int j, int k, float LineWidth = 5) {
+			NUI_SKELETON_DATA skeleton = getSkeleton(i);
+			glm::vec3 point1 = glm::vec3(skeleton.SkeletonPositions[j].x, skeleton.SkeletonPositions[j].y, skeleton.SkeletonPositions[j].z);
+			glm::vec3 point2 = glm::vec3(skeleton.SkeletonPositions[k].x, skeleton.SkeletonPositions[k].y, skeleton.SkeletonPositions[k].z);
+			point1 -= glm::vec3(0, 0, 2);
+			point2 -= glm::vec3(0, 0, 2);
+			glm::vec3 color = Util::HSVtoRGB(1 / i, 1, .5);
+			glLineWidth(LineWidth);
+			glBegin(GL_LINES);
+			glColor3f(color.x, color.y, color.z);
+			glVertex3f(point1.x, point1.y, point1.z);
+			glVertex3f(point2.x, point2.y, point2.z);
+			glEnd();
+		}
+		
+		void DrawSkeleton(int i, float PointSize, bool DrawJoints = true, bool DrawBones = true) {
+			//get Skeleton and draw
+			NUI_SKELETON_DATA skeleton = getSkeleton(i);
+			if (DrawJoints) {
+				for (int j = 0; j < NUI_SKELETON_POSITION_COUNT; j++)
+				{
+					glm::vec3 point = glm::vec3(skeleton.SkeletonPositions[j].x, skeleton.SkeletonPositions[j].y, skeleton.SkeletonPositions[j].z);
+					point -= glm::vec3(0, 0, 2);
+					glm::vec3 color = Util::HSVtoRGB(1 / i, 1, .5);
+
+					glPointSize(PointSize);
+					glBegin(GL_POINTS);
+					glColor3f(color.x, color.y, color.z);
+					glVertex3f(point.x, point.y, point.z);
+					glEnd();
+				}
+			}
+			if (DrawBones) {
+				// Torso
+				DrawBone(i, NUI_SKELETON_POSITION_HEAD, NUI_SKELETON_POSITION_SHOULDER_CENTER);
+				DrawBone(i, NUI_SKELETON_POSITION_SHOULDER_CENTER, NUI_SKELETON_POSITION_SHOULDER_LEFT);
+				DrawBone(i, NUI_SKELETON_POSITION_SHOULDER_CENTER, NUI_SKELETON_POSITION_SHOULDER_RIGHT);
+				DrawBone(i, NUI_SKELETON_POSITION_SHOULDER_CENTER, NUI_SKELETON_POSITION_SPINE);
+				DrawBone(i, NUI_SKELETON_POSITION_SPINE, NUI_SKELETON_POSITION_HIP_CENTER);
+				DrawBone(i, NUI_SKELETON_POSITION_HIP_CENTER, NUI_SKELETON_POSITION_HIP_LEFT);
+				DrawBone(i, NUI_SKELETON_POSITION_HIP_CENTER, NUI_SKELETON_POSITION_HIP_RIGHT);
+
+				// Left Arm
+				DrawBone(i, NUI_SKELETON_POSITION_SHOULDER_LEFT, NUI_SKELETON_POSITION_ELBOW_LEFT);
+				DrawBone(i, NUI_SKELETON_POSITION_ELBOW_LEFT, NUI_SKELETON_POSITION_WRIST_LEFT);
+				DrawBone(i, NUI_SKELETON_POSITION_WRIST_LEFT, NUI_SKELETON_POSITION_HAND_LEFT);
+
+				// Right Arm
+				DrawBone(i, NUI_SKELETON_POSITION_SHOULDER_RIGHT, NUI_SKELETON_POSITION_ELBOW_RIGHT);
+				DrawBone(i, NUI_SKELETON_POSITION_ELBOW_RIGHT, NUI_SKELETON_POSITION_WRIST_RIGHT);
+				DrawBone(i, NUI_SKELETON_POSITION_WRIST_RIGHT, NUI_SKELETON_POSITION_HAND_RIGHT);
+
+				// Left Leg
+				DrawBone(i, NUI_SKELETON_POSITION_HIP_LEFT, NUI_SKELETON_POSITION_KNEE_LEFT);
+				DrawBone(i, NUI_SKELETON_POSITION_KNEE_LEFT, NUI_SKELETON_POSITION_ANKLE_LEFT);
+				DrawBone(i, NUI_SKELETON_POSITION_ANKLE_LEFT, NUI_SKELETON_POSITION_FOOT_LEFT);
 			}
 		}
-
-		if (NULL == Sensor || FAILED(hr))
-		{
-			return false;
+		//set angle
+		void setAngle(int angle) {
+			sensor->NuiCameraElevationSetAngle(angle);
 		}
 
-		return true;
-	}
-
-	void UpdateSkeletons() {
-		NuiSkeletonGetNextFrame(0,&ourframe); //Get a frame and stuff it into ourframe
-		for (int i = 0; i < 6; i++) {
-			People[i].Tracked = ourframe.SkeletonData[i].eTrackingState == NUI_SKELETON_TRACKED;
-			if (People[i].Tracked) {
-				People[i].UpdateSkelly(ourframe.SkeletonData[i]);
-			}
-			//std::cout << "Person[" << i << "]: x:" << People[i].HandR.x << " y:" << People[i].HandR.y << " z:" << People[i].HandR.z<<std::endl;
+		//get angle
+		int getAngle() {
+			LONG angle;
+			sensor->NuiCameraElevationGetAngle(&angle);
+			return angle;
 		}
-		//system("cls");
-	}
+		
+	};
 }

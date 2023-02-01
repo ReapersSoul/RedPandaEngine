@@ -1,15 +1,22 @@
 #pragma once
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
-#include "Scripting_Language.h"
+#include "VirtualMachineLanguage.h"
 
 
-class Python :public Scripting_Language {
+class Python :public VirtualMachineLanguage {
 	PyObject* main_module, * main_dict;
 	PyObject* sys_module, * sys_dict;
 	PyObject* version_obj;
 	char* version_string;
 public:
+
+	Python() {
+		Name = "Python";
+		PrimaryColor = glm::vec3(21, 234, 128);
+		//maroon
+		SecondaryColor = glm::vec3(128, 21, 21);
+	}
 
 	bool Init() {
 		Py_Initialize();
@@ -110,10 +117,11 @@ public:
 	//	return false;
 	//}
 
-	bool SetVar(std::string Name, bool x) {
-		PyObject* value = PyLong_FromDouble(x);
-		int i=PyDict_SetItemString(main_dict, Name.c_str(), value);
-		Py_DECREF(value);
+	bool SetVar(std::string Name, bool value) {
+		PyObject* i_obj;
+		i_obj = Py_BuildValue("b", value);
+		PyDict_SetItemString(main_dict, Name.c_str(), i_obj);
+		Py_XDECREF(i_obj);
 		return true;
 	};
 	bool SetVar(std::string Name, double x) {
@@ -155,17 +163,24 @@ public:
 		Py_XDECREF(i_obj);
 		return true;
 	};
-	bool SetVar(std::string Name, Table value) {
-		PyObject* i_obj;
-		i_obj = Py_BuildValue(Name.c_str(), value);
-		PyDict_SetItemString(main_dict, Name.c_str(), i_obj);
-		Py_XDECREF(i_obj);
-		return true;
-	};
+	//bool SetVar(std::string Name, Table value) {
+	//	PyObject* i_obj;
+	//	i_obj = Py_BuildValue(Name.c_str(), value);
+	//	PyDict_SetItemString(main_dict, Name.c_str(), i_obj);
+	//	Py_XDECREF(i_obj);
+	//	return true;
+	//};
 
 	//TODO::
 	//bool RegisterLinkedVar(std::string Name, T* value);
 
+	bool GetVarAsBool(std::string Name)
+	{
+		PyObject* i_obj;
+		i_obj = PyDict_GetItemString(main_dict, Name.c_str());
+		int i = PyLong_AsLong(i_obj);
+		return i;
+	}
 
 	std::string GetVarAsString(std::string Name)
 	{
@@ -188,14 +203,6 @@ public:
 	{
 		PyObject* v = PyDict_GetItemString(main_dict, Name.c_str());
 		int ret = PyLong_AsDouble(v);
-		Py_DECREF(v);
-		return ret;
-	}
-
-	bool GetVarAsBool(std::string Name)
-	{
-		PyObject* v = PyDict_GetItemString(main_dict, Name.c_str());
-		bool ret = PyObject_IsTrue(v);
 		Py_DECREF(v);
 		return ret;
 	}
