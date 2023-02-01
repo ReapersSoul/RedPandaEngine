@@ -10,8 +10,40 @@
 #include "util.h"
 
 namespace Kinect {
+	class Bone {
+		glm::vec3 position;
+		glm::vec3 rotation;
+		glm::vec3 scale;
+	};
 	class Skeleton {
+		glm::vec4 joints[20];
+		Bone bones[19];
+	public:
+		void Update(NUI_SKELETON_DATA data) {
+			for (int i = 0; i < NUI_SKELETON_POSITION_COUNT; i++)
+			{
+				joints[i] = glm::vec4(data.SkeletonPositions[i].x, data.SkeletonPositions[i].y, data.SkeletonPositions[i].z, data.SkeletonPositions[i].w);
+			}
+		}
+		glm::vec4 GetJoint(int i) {
+			return joints[i];
+		}
 
+		void DrawJoints(float PointSize,std::function<glm::vec4(glm::vec4 point)> call) {
+			glPointSize(PointSize);
+			glBegin(GL_POINTS);
+			bool vib = false;
+			for (int j = 0; j < NUI_SKELETON_POSITION_COUNT; j++)
+			{
+				glm::vec4 point = call(joints[j]);
+				glVertex3f(point.x, point.y, point.z);
+			}
+			glEnd();
+		}
+
+		void DrawBones(float LineWidth,std::function<Bone(Bone)> call) {
+
+		}
 	};
 
 	//a abstraction of the Kinect SDK's sensor
@@ -28,6 +60,7 @@ namespace Kinect {
 			int numSensors = 0;
 			NuiGetSensorCount(&numSensors);
 			if (numSensors == 0) {
+				PLOGE_(Util::Logs::Error) << "No Kinect Sensor Found";
 				throw "No Kinect Sensor Found";
 			}
 			NuiCreateSensorByIndex(0, &sensor);

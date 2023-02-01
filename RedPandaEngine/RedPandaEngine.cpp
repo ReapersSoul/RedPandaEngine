@@ -3,12 +3,15 @@
 
 #include <iostream>
 #include <string>
+#include <sstream>
+#include <vector>
 #include "Graphics.h"
 //#include "Lua.h"
 //#include "Python.h"
 //#include "Language_Manager.h"
 #include "Lovense_Device.h"
 #include "Kinect.h"
+#include "util.h"
 
 ToyManager tm;
 
@@ -23,6 +26,7 @@ char buff2[255]={0};
 Kinect::Sensor sensor;
 bool DrawGrid = true;
 bool VibrateCollision = false;
+bool VibeController = false;
 GLuint TextureID;
 GLuint TextureID2;
 void* ImageBuffer1;
@@ -30,8 +34,29 @@ void* ImageBuffer2;
 GLuint frameBuffer;
 GLuint renderBuffer;
 GLuint texture;
+float color = 0;
+Graphics::MeshTools::Shapes::Cube cube;
+
+Kinect::Skeleton skeletons[NUI_SKELETON_COUNT];
+
 
 void Update(GLFWwindow* wind, int Window_Width, int Window_Height) {
+	if (glfwJoystickPresent(GLFW_JOYSTICK_1)) {
+		int count;
+		const float* axis = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &count);
+		color = Util::map<float>(axis[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER], -1, 1, 0, 360);
+		if (VibeController) {
+			if (tm.GetToys().size() > 0) {
+				if (tm.GetToy(0)->GetConnected()) {
+					int vibelevel = floor(Util::map<float>(axis[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER], -1, 1, 0, 20));
+					if (vibelevel != tm.GetToy(0)->GetVibrationLevel()) {
+						tm.GetToy(0)->RequestVibrate(vibelevel);
+					}
+				}
+			}
+		}
+	}
+	
 	//draw kinect camera depth
 	sensor.getDepthFrame([](void* data, int size) {
 		delete ImageBuffer1;
@@ -82,11 +107,14 @@ void Update(GLFWwindow* wind, int Window_Width, int Window_Height) {
 	NUI_SKELETON_FRAME  frame = sensor.getSkeletonFrame();
 	for (int i = 0; i < NUI_SKELETON_COUNT; i++)
 	{
+		if (frame.SkeletonData[i].eTrackingState == NUI_SKELETON_TRACKED) {
+			skeletons[i].Update(frame.SkeletonData[i]);
+		}
 		glPointSize(10);
 		glBegin(GL_POINTS);
 		for (int j = 0; j < NUI_SKELETON_POSITION_COUNT; j++)
 		{
-			glm::vec3 point = glm::vec3(frame.SkeletonData[i].SkeletonPositions[j].x, frame.SkeletonData[i].SkeletonPositions[j].y, frame.SkeletonData[i].SkeletonPositions[j].z);
+			glm::vec3 point = glm::vec3(skeletons[i].GetJoint(j).x, skeletons[i].GetJoint(j).y, skeletons[i].GetJoint(j).z);
 			Graphics::glColor(Util::HSVtoRGB(360/(i+1), 100, 100));
 
 			glVertex3f(-point.x, -point.y, point.z);
@@ -100,9 +128,65 @@ void Update(GLFWwindow* wind, int Window_Width, int Window_Height) {
 
 //draw functions
 void GUI(GLFWwindow* wind, int Window_Width, int Window_Height) {
+	if (ImGui::Begin("Log")) {
+		//tabs of logs
+		if (ImGui::BeginTabBar("Logs")) {
+			if (ImGui::BeginTabItem("Info")) {
+				for (int i = 0; i < Util::Logs::InfoLog.getMessageList().size(); i++)
+				{
+					ImGui::TextUnformatted(Util::Logs::InfoLog.getMessageList()[i].c_str());
+				}
+				ImGui::EndTabItem();
+			}
+			if (ImGui::BeginTabItem("Errors")) {
+				for (int i = 0; i < Util::Logs::ErrorLog.getMessageList().size(); i++)
+				{
+					ImGui::TextUnformatted(Util::Logs::ErrorLog.getMessageList()[i].c_str());
+				}
+				ImGui::EndTabItem();
+			}
+			if (ImGui::BeginTabItem("Debug")) {
+				for (int i = 0; i < Util::Logs::DebugLog.getMessageList().size(); i++)
+				{
+					ImGui::TextUnformatted(Util::Logs::DebugLog.getMessageList()[i].c_str());
+				}
+
+				ImGui::EndTabItem();
+			}
+			if (ImGui::BeginTabItem("Lovense")) {
+				for (int i = 0; i < LovenseLog.getMessageList().size(); i++)
+				{
+					ImGui::TextUnformatted(LovenseLog.getMessageList()[i].c_str());
+				}
+				ImGui::EndTabItem();
+			}
+			ImGui::EndTabBar();
+		}
+	}
+	ImGui::End();
+	
 	if (ImGui::Begin("View")) {
 		ImGui::Checkbox("Draw Grid", &DrawGrid);
-		ImGui::Checkbox("Vibrate Collision", &VibrateCollision);
+
+		//radio
+		static int ViewMode = 0;
+		ImGui::RadioButton("Vibrate Collision", &ViewMode, 0);
+		ImGui::RadioButton("Vibrate Controller", &ViewMode, 1);
+		switch (ViewMode)
+		{
+		case 0:
+			//vibrate collision
+			VibrateCollision = true;
+			VibeController = false;
+			break;
+		case 1:
+			//vibrate controller
+			VibrateCollision = false;
+			VibeController = true;
+			break;
+		default:
+			break;
+		}
 	}
 	ImGui::End();
 
@@ -114,14 +198,8 @@ void GUI(GLFWwindow* wind, int Window_Width, int Window_Height) {
 			sensor.setAngle(angle);
 		}
 		
-		ImGui::Image((void*)(intptr_t)TextureID, ImVec2(640,480));
+		ImGui::Image((void*)(intptr_t)TextureID, ImVec2(640,480));		
 
-		
-
-		
-		ImGui::Image((void*)(intptr_t)TextureID2, ImVec2(1280,960));
-		
-		//flip uv
 		ImGui::Image((void*)texture, ImVec2(1280, 960));
 
 	}
@@ -136,10 +214,12 @@ void GUI(GLFWwindow* wind, int Window_Width, int Window_Height) {
 		ImGui::BeginTable("Toys", 9);
 		ImGui::TableSetupColumn("Toy ID");
 		ImGui::TableSetupColumn("Toy Name");
+		ImGui::TableSetupColumn("Battery Level");
+		ImGui::TableSetupColumn("Conected Status");
 		ImGui::TableHeadersRow();
 				
 		for (auto it=toys.begin(); it != toys.end(); it++)
-		{
+		{			
 			ImGui::TableNextRow();
 			ImGui::TableNextColumn();
 			ImGui::Text(it->second->GetID().c_str());
@@ -150,8 +230,10 @@ void GUI(GLFWwindow* wind, int Window_Width, int Window_Height) {
 			ImGui::TableNextColumn();
 			ImGui::Text(std::to_string(it->second->GetConnected()).c_str());
 			ImGui::TableNextColumn();
-			if (ImGui::Button("Connect"))
+			if (ImGui::Button("Connect")) {
 				it->second->RequestConnect();
+				it->second->RequestBattery();
+			}
 			ImGui::TableNextColumn();
 			if (ImGui::Button("Disconnect"))
 				it->second->RequestDisConnect();
@@ -188,7 +270,7 @@ void Camera(GLFWwindow* wind, int Window_Width, int Window_Height) {
 	gluLookAt(cam_x, cam_y, cam_z, 0, 0, 0, 0, 1, 0);
 }
 
-void DrawXYZGrid(float from,float to, int resolution,float lineWidth) {
+void DrawXYZGrid(float from, float to, int resolution, float lineWidth) {
 	float dist = to - from;
 	float stepSize = dist / resolution;
 	//draw x y z grid from -1 to 1
@@ -225,74 +307,46 @@ void DrawXYZGrid(float from,float to, int resolution,float lineWidth) {
 }
 
 void Draw(GLFWwindow* wind, int Window_Width, int Window_Height) {
-	if(DrawGrid)
-	DrawXYZGrid(-1, 1, 4, 2);
-	
+	if (DrawGrid)
+		DrawXYZGrid(-1, 1, 4, 2);
+
 	//draw cube in top right
 	glPushMatrix();
-	Graphics::MeshTools::Shapes::Cube cube;
-	
-    //get Skeleton and draw
-	NUI_SKELETON_FRAME  frame = sensor.getSkeletonFrame();
+
+	//get Skeleton and draw
 	for (int i = 0; i < NUI_SKELETON_COUNT; i++)
 	{
-			glPointSize(10);
-			glBegin(GL_POINTS);
-			for (int j = 0; j < NUI_SKELETON_POSITION_COUNT; j++)
-			{
-				glm::vec3 point = glm::vec3(frame.SkeletonData[i].SkeletonPositions[j].x, frame.SkeletonData[i].SkeletonPositions[j].y, frame.SkeletonData[i].SkeletonPositions[j].z);
-				point -= glm::vec3(0, 0, 2);
-				//check if the point is on left side of the screen
-				if (cube.Within(point)) {
-					//vibrate connected toys
-					if (tm.GetToys().size() > 0)
-					if (tm.GetToy(0)->GetVibrationLevel2() != atoi(buff)&& VibrateCollision) {
-						tm.GetToy(0)->RequestVibrate(atoi(buff),2);
-					}
-					Graphics::glColor(Util::HSVtoRGB(222, 71, 96));
-				}
-				else {
-					if(tm.GetToys().size()>0)
-					if (tm.GetToy(0)->GetVibrationLevel2() != 0 && VibrateCollision) {
-						tm.GetToy(0)->RequestVibrate(0,2);
-					}
-					Graphics::glColor(Util::HSVtoRGB(26, 96, 81));
-				}
-
-				glVertex3f(point.x, point.y, point.z);
+		skeletons[i].DrawJoints(10, [](glm::vec4 point) {
+			glm::vec4 ret = point - glm::vec4(0, 0, 2, 0);;
+			if (cube.Within(ret)) {
+				tm.VibrateAll(1);
+				Graphics::glColor(Util::HSVtoRGBA(360, 0, 100, 1));
 			}
-			glEnd();
+			else {
+				Graphics::glColor(Util::HSVtoRGBA(360, 100, 100, 1));
+				tm.VibrateAll(0);
+			}
+			return ret;
+			});
 	}
-	Graphics::glColor(Util::HSVtoRGBA(321, 53, 66,.25));
+	Graphics::glColor(Util::HSVtoRGBA(color, 53, 66, .25));
 	cube.Draw();
 	glPopMatrix();
 }
-
-int main()
-{
-	
-	sensor.setAngle(10);
-	sensor.setAngle(0);
-	Graphics::SetCallBackWindow(&window);
-	window.Set_Update_function(Update);
-	window.Set_GUI_function(GUI);
-	window.Set_Camera_function(Camera);
-	window.Set_Draw_function(Draw);
-	window.Init();
-	
+void InitFrameBuffer() {
 	//setup frame buffer, render buffer, and texture
 	glGenFramebuffers(1, &frameBuffer);
 	glGenTextures(1, &texture);
 	glGenRenderbuffers(1, &renderBuffer);
 	glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
-	
+
 	glBindTexture(GL_TEXTURE_2D, texture);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1280, 960, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
 
-	
+
 	glBindRenderbuffer(GL_RENDERBUFFER, renderBuffer);
 	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, 1280, 960);
 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, renderBuffer);
@@ -304,7 +358,41 @@ int main()
 	}
 	//unbind frame buffer
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+//create main event proceassor
+class MainEventProcessor : public EventStream::EventProcessor {
+	bool HandleEvent(EventStream::Event* e) override {
+		std::string Type = e->EventType;
+		if (Type == "JoystickEvent") {
+			EventStream::JoystickEvent* je = (EventStream::JoystickEvent*)e;
+			if (glfwJoystickIsGamepad(je->jid)) {
+				PLOGD_(Util::Logs::Debug) << "Joy";
+			}
+		}
+
+		return true;
+	};
+};
+
+int main()
+{
+	::ShowWindow(::GetConsoleWindow(), SW_HIDE);
 	
+	sensor.setAngle(10);
+	sensor.setAngle(0);
+	Graphics::SetCallBackWindow(&window);
+	window.AddEventProcessor(new MainEventProcessor());
+	window.Set_Update_function(Update);
+	window.Set_GUI_function(GUI);
+	window.Set_Camera_function(Camera);
+	window.Set_Draw_function(Draw);
+	window.Init();
+	
+	InitFrameBuffer();
+	
+	Util::Logs::InitLogs();
+	InitLovenseLog();
 	//render to screen	
 	window.Loop();
 	window.CleanUp();

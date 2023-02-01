@@ -3,6 +3,38 @@
 #include <iostream>
 #include <string>
 #include <glm/glm.hpp>
+//plog headers
+#include <plog/Log.h>
+#include <plog/Init.h>
+#include <plog/Appenders/ColorConsoleAppender.h>
+#include <plog/Appenders/RollingFileAppender.h>
+#include <plog/Formatters/TxtFormatter.h>
+#include <plog/Formatters/FuncMessageFormatter.h>
+
+namespace plog {
+    template<class Formatter> // Typically a formatter is passed as a template parameter.
+    class VisibleAppender : public IAppender // All appenders MUST inherit IAppender interface.
+    {
+    public:
+        void write(const Record& record) override // This is a method from IAppender that MUST be implemented.
+        {
+            util::nstring str = Formatter::format(record); // Use the formatter to get a string from a record.
+			if (str.empty())
+				return;
+            if (m_messageList.size() > 3000) {
+                m_messageList.erase(m_messageList.begin());
+            }
+            m_messageList.push_back(std::string(str.begin(), str.end())); // Store a log message in a list.
+        }
+
+        std::vector<std::string>& getMessageList()
+        {
+            return m_messageList;
+        }
+    private:
+        std::vector<std::string> m_messageList;
+    };
+}
 
 namespace Util {
     template<typename T>
@@ -58,19 +90,47 @@ namespace Util {
         float R = (r + m);
         float G = (g + m);
         float B = (b + m);
-		return glm::vec3(R, G, B);
+        return glm::vec3(R, G, B);
     }
- 
+
     static glm::vec3 HSVtoRGB(glm::vec3 HSV) {
-		return HSVtoRGB(HSV.x, HSV.y, HSV.z);
-	}
-	static glm::vec4 HSVtoRGBA(float H, float S, float V, float A) {
-		glm::vec3 rgb = HSVtoRGB(H, S, V);
-		return glm::vec4(rgb.x, rgb.y, rgb.z, A);
-	}
-	
+        return HSVtoRGB(HSV.x, HSV.y, HSV.z);
+    }
+    static glm::vec4 HSVtoRGBA(float H, float S, float V, float A) {
+        glm::vec3 rgb = HSVtoRGB(H, S, V);
+        return glm::vec4(rgb.x, rgb.y, rgb.z, A);
+    }
+
     static float Dist(glm::vec2 one, glm::vec2 two) {
         glm::vec2 squared = (two - one) * (two - one);
         return sqrt(squared.x + squared.y);
+    }
+
+    //lerp template
+	template<typename T>
+	T lerp(T a, T b, float t) {
+		return a + (b - a) * t;
+	}
+    //map range
+	template<typename T>
+	T map(T value, T fromLow, T fromHigh, T toLow, T toHigh) {
+		return (value - fromLow) / (fromHigh - fromLow) * (toHigh - toLow) + toLow;
+	}
+
+    namespace Logs {
+        enum Logs_T {
+            Debug,
+            Error,
+            Info
+        };
+
+
+        static plog::VisibleAppender<plog::TxtFormatter> InfoLog, ErrorLog, DebugLog;
+
+		static void InitLogs() {
+            plog::init<Logs_T::Info>(plog::none, new plog::RollingFileAppender<plog::TxtFormatter>("Info.log", 1000, 5)).addAppender(&InfoLog);
+			plog::init<Logs_T::Error>(plog::error, new plog::RollingFileAppender<plog::TxtFormatter>("Error.log", 1000, 5)).addAppender(&ErrorLog);
+			plog::init<Logs_T::Debug>(plog::debug, new plog::RollingFileAppender<plog::TxtFormatter>("Debug.log", 1000, 5)).addAppender(&DebugLog);
+		}
     }
 }

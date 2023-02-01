@@ -24,8 +24,10 @@
 #include <functional>
 
 namespace EventStream {
-
-    struct MouseEvent {
+    struct Event {
+        std::string EventType;
+    };
+    struct MouseEvent :public Event{
         int x, y;
         int normal_x, normal_y;
         int button;
@@ -34,29 +36,23 @@ namespace EventStream {
         double scrollxoffset;
         double scrollyoffset;
     };
-    struct KeyboardEvent {
+    struct KeyboardEvent :public Event {
         int key; int scancode; int action; int mods;
     };
-    struct JoystickEvent {
+    struct JoystickEvent :public Event {
         int jid;
         int evnt;
     };
-    struct ErrorEvent {
+    struct ErrorEvent :public Event {
         int error;
         const char* description;
     };
 
-    struct Event {
-        std::string EventType;
-        MouseEvent mouse;
-        KeyboardEvent keyboard;
-        JoystickEvent joystick;
-        ErrorEvent error;
-    };
+
 
     class EventProcessor {
     public:
-        virtual bool HandleEvent(Event e) {
+        virtual bool HandleEvent(Event * e) {
             return true;
         };
     };
@@ -119,7 +115,7 @@ namespace Graphics {
             while (Events.size() > 0) {
                 for (int i = 0; i < EventProcessors.size(); i++) {
                     //if should pass event to rest of event processors
-                    if (!EventProcessors[i]->HandleEvent(Events[0])) {
+                    if (!EventProcessors[i]->HandleEvent(&Events[0])) {
                         Events.erase(Events.begin());
                         break;
                     }
@@ -257,9 +253,9 @@ namespace Graphics {
 
     static void error_callback(int error, const char* description)
     {
-        EventStream::Event e;
-        e.error.error = error;
-        e.error.description = description;
+        EventStream::ErrorEvent e;
+        e.error = error;
+        e.description = description;
         e.EventType = "ErrorEvent";
         Callback_Window->PushEvent(e);
     }
@@ -270,11 +266,11 @@ namespace Graphics {
         ImGuiIO& io = ImGui::GetIO();
         if (!io.WantCaptureKeyboard) {
             //PROCESS KEYBOARD HERE
-            EventStream::Event e;
-            e.keyboard.key = key;
-            e.keyboard.scancode = scancode;
-            e.keyboard.action = action;
-            e.keyboard.mods = mods;
+            EventStream::KeyboardEvent e;
+            e.key = key;
+            e.scancode = scancode;
+            e.action = action;
+            e.mods = mods;
             e.EventType = "KeyboardEvent";
             Callback_Window->PushEvent(e);
         }
@@ -286,13 +282,13 @@ namespace Graphics {
         ImGuiIO& io = ImGui::GetIO();
         if (!io.WantCaptureMouse) {
             //PROCESS MOUSE HERE
-            EventStream::Event e;
-            e.mouse.x = xpos;
-            e.mouse.y = ypos;
+            EventStream::MouseEvent e;
+            e.x = xpos;
+            e.y = ypos;
             int width, height = 0;
             glfwGetWindowSize(InteractionWindow, &width, &height);
-            e.mouse.normal_x = (((float)xpos / (float)width) - .5) * 2;
-            e.mouse.normal_y = ((1 - ((float)ypos / (float)height)) - .5) * 2;
+            e.normal_x = (((float)xpos / (float)width) - .5) * 2;
+            e.normal_y = ((1 - ((float)ypos / (float)height)) - .5) * 2;
             e.EventType = "MouseMoveEvent";
             Callback_Window->PushEvent(e);
         }
@@ -306,16 +302,16 @@ namespace Graphics {
             //PROCESS MOUSE HERE
             double xpos, ypos;
             glfwGetCursorPos(window, &xpos, &ypos);
-            EventStream::Event e;
-            e.mouse.action = action;
-            e.mouse.button = button;
-            e.mouse.mods = mods;
-            e.mouse.x = xpos;
-            e.mouse.y = ypos;
+            EventStream::MouseEvent e;
+            e.action = action;
+            e.button = button;
+            e.mods = mods;
+            e.x = xpos;
+            e.y = ypos;
             int width, height = 0;
             glfwGetWindowSize(InteractionWindow, &width, &height);
-            e.mouse.normal_x = (((float)xpos / (float)width) - .5) * 2;
-            e.mouse.normal_y = ((1 - ((float)ypos / (float)height)) - .5) * 2;
+            e.normal_x = (((float)xpos / (float)width) - .5) * 2;
+            e.normal_y = ((1 - ((float)ypos / (float)height)) - .5) * 2;
             e.EventType = "MouseButtonEvent";
             Callback_Window->PushEvent(e);
         }
@@ -329,15 +325,15 @@ namespace Graphics {
             //PROCESS MOUSE HERE
             double xpos, ypos;
             glfwGetCursorPos(window, &xpos, &ypos);
-            EventStream::Event e;
-            e.mouse.scrollxoffset = xoffset;
-            e.mouse.scrollyoffset = yoffset;
-            e.mouse.x = xpos;
-            e.mouse.y = ypos;
+            EventStream::MouseEvent e;
+            e.scrollxoffset = xoffset;
+            e.scrollyoffset = yoffset;
+            e.x = xpos;
+            e.y = ypos;
             int width, height = 0;
             glfwGetWindowSize(InteractionWindow, &width, &height);
-            e.mouse.normal_x = (((float)xpos / (float)width) - .5) * 2;
-            e.mouse.normal_y = ((1 - ((float)ypos / (float)height)) - .5) * 2;
+            e.normal_x = (((float)xpos / (float)width) - .5) * 2;
+            e.normal_y = ((1 - ((float)ypos / (float)height)) - .5) * 2;
             e.EventType = "MouseScrollEvent";
             Callback_Window->PushEvent(e);
         }
@@ -345,9 +341,9 @@ namespace Graphics {
 
     static void joystick_callback(int jid, int event)
     {
-        EventStream::Event e;
-        e.joystick.evnt = event;
-        e.joystick.jid = jid;
+        EventStream::JoystickEvent e;
+        e.evnt = event;
+        e.jid = jid;
         e.EventType = "JoystickEvent";
         Callback_Window->PushEvent(e);
     }

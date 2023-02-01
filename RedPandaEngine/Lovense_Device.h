@@ -11,8 +11,19 @@
 #include <json.hpp>
 #include <fstream>
 #include <sstream>
+#include "util.h"
 
 using json = nlohmann::json;
+		enum Logs_T {
+			Lovense = 3
+		};
+
+static plog::VisibleAppender<plog::TxtFormatter> LovenseLog;
+
+void InitLovenseLog() {
+	plog::init<Logs_T::Lovense>(plog::verbose, new plog::RollingFileAppender<plog::TxtFormatter>("Lovense.log", 1000, 5)).addAppender(&LovenseLog);
+}
+
 
 static enum LightStatus {
 	L_on,
@@ -572,11 +583,15 @@ public:
 	//callbacks
 	void LovenseDidSearchStart() {
 		searching = true;
+		PLOGN_(Logs_T::Lovense) << "Lovense Device Search Started!";
 	}
 
 	/*Call when toy searching toy*/
 	void LovenseSearchingToys(lovense_toy_info_t* info) {
 		Toy* toy = new Toy(toyManager,info);
+		PLOGN_(Logs_T::Lovense) << "Lovense Found Toy!";
+		PLOGN_(Logs_T::Lovense) << "ID: " << toy->GetID();
+		
 		if (Toys.find(toy->GetID())==Toys.end()) {
 			Toys.insert(std::pair<std::string, Toy*>(toy->GetID(), toy));
 		}
@@ -588,32 +603,40 @@ public:
 
 	/*Call when Something went wrong*/
 	void LovenseErrorOutPut(int errorCode, const char* errorMsg) {
-		
+		PLOGE_(Util::Logs::Error) << "Lovense Error: " << errorCode << " " << errorMsg;
 	}
 
 	/*Call when toy search end*/
 	void LovenseDidSearchEnd() {
 		searching = false;
+		PLOGN_(Logs_T::Lovense) << "Lovense Device Search Ended!";
 	}
 
 	/*Call when send cmd start*/
 	void LovenseDidSendCmdStart() {
-		
+		PLOGN_(Logs_T::Lovense) << "Lovense Send Command Started!";
 	}
 
 	/*Call when send cmd return*/
 	void LovenseSendCmdResult(const char* szToyID, CLovenseToy::CmdType cmd, const char* result, CLovenseToy::Error errorCode) {
 		Toys.at(szToyID)->OnCmdResult(cmd, result, errorCode);
+		if (errorCode != CLovenseToy::Error::TOYERR_SUCCESS) {
+			PLOGE_(Logs_T::Lovense) << "Lovense Send Command Result: " << result << " Toy: " << szToyID << " Error: " << errorCode;
+		}
+		else {
+			PLOGN_(Logs_T::Lovense) << "Lovense Send Command Result: " << result << " Toy: " << szToyID;
+		}
 	}
 
 	/*Call when send cmd end*/
 	void LovenseDidSendCmdEnd() {
-		
+		PLOGN_(Logs_T::Lovense) << "Lovense Send Command Ended!";
 	}
 
 	/*Call when toy connected, or disconnected*/
 	void LovenseToyConnectedStatus(const char* szToyID, bool isConnected) {
 		Toys.at(szToyID)->SetConnected(isConnected);
+		PLOGN_(Logs_T::Lovense) << "Lovense Toy Connected Status: " << isConnected << " Toy: " << szToyID;
 	}
 
 	//methods
