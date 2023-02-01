@@ -57,6 +57,11 @@ void Update(GLFWwindow* wind, int Window_Width, int Window_Height) {
 		ImageBuffer2 = malloc(size);
 		memcpy(ImageBuffer2, data, size);
 		});
+	//render to frame buffer
+	glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
+	glViewport(0, 0, 1280, 960);
+	glClearColor(0.0, 00, 00, 1.0);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	//bind image to texture id
 	glBindTexture(GL_TEXTURE_2D, texture);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -64,18 +69,13 @@ void Update(GLFWwindow* wind, int Window_Width, int Window_Height) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1280, 960, 0, GL_BGRA, GL_UNSIGNED_BYTE, ImageBuffer2);
-
-	//render to frame buffer
-	glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
-	glViewport(0, 0, 1280, 960);
 	// Draw stuff
-	//glClearColor(0.0, 00, 00, 1.0);
-	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
 	glMatrixMode(GL_PROJECTION_MATRIX);
 	glLoadIdentity();
 	gluPerspective(45, (float)1280 / (float)960, 0.1, 1000);
 	gluLookAt(0,0, -1, 0, 0, 0, 0, 1, 0);
-	glTranslated(0, 0, 1);
+	glTranslated(0, 0, -1);
 	glMatrixMode(GL_MODELVIEW_MATRIX);
 	
 	//get Skeleton and draw
@@ -89,7 +89,7 @@ void Update(GLFWwindow* wind, int Window_Width, int Window_Height) {
 			glm::vec3 point = glm::vec3(frame.SkeletonData[i].SkeletonPositions[j].x, frame.SkeletonData[i].SkeletonPositions[j].y, frame.SkeletonData[i].SkeletonPositions[j].z);
 			Graphics::glColor(Util::HSVtoRGB(360/(i+1), 100, 100));
 
-			glVertex3f(point.x, -point.y, point.z);
+			glVertex3f(-point.x, -point.y, point.z);
 		}
 		glEnd();
 	}
