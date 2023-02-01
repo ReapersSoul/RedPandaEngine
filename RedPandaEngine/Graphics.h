@@ -63,78 +63,13 @@ namespace EventStream {
 }
 
 namespace Graphics {
-
-    namespace Util {
-        static glm::vec3 HSVtoRGB(float H, float S, float V) {
-            if (H > 360 || H < 0 || S>100 || S < 0 || V>100 || V < 0) {
-                return glm::vec3(0);
-            }
-            float s = S / 100;
-            float v = V / 100;
-            float C = s * v;
-            float X = C * (1 - abs(fmod(H / 60.0, 2) - 1));
-            float m = v - C;
-            float r, g, b;
-            if (H >= 0 && H < 60) {
-                r = C, g = X, b = 0;
-            }
-            else if (H >= 60 && H < 120) {
-                r = X, g = C, b = 0;
-            }
-            else if (H >= 120 && H < 180) {
-                r = 0, g = C, b = X;
-            }
-            else if (H >= 180 && H < 240) {
-                r = 0, g = X, b = C;
-            }
-            else if (H >= 240 && H < 300) {
-                r = X, g = 0, b = C;
-            }
-            else {
-                r = C, g = 0, b = X;
-            }
-            return glm::vec3((r + m) * 255, (g + m) * 255, (b + m) * 255);
-        }
-
-        static glm::vec3 HSVtoRGB(glm::vec3 HSV) {
-            float H = HSV.x;
-            float S = HSV.y;
-            float V = HSV.z;
-            if (H > 360 || H < 0 || S>100 || S < 0 || V>100 || V < 0) {
-                return glm::vec3(0);
-            }
-            float s = S / 100;
-            float v = V / 100;
-            float C = s * v;
-            float X = C * (1 - abs(fmod(H / 60.0, 2) - 1));
-            float m = v - C;
-            float r, g, b;
-            if (H >= 0 && H < 60) {
-                r = C, g = X, b = 0;
-            }
-            else if (H >= 60 && H < 120) {
-                r = X, g = C, b = 0;
-            }
-            else if (H >= 120 && H < 180) {
-                r = 0, g = C, b = X;
-            }
-            else if (H >= 180 && H < 240) {
-                r = 0, g = X, b = C;
-            }
-            else if (H >= 240 && H < 300) {
-                r = X, g = 0, b = C;
-            }
-            else {
-                r = C, g = 0, b = X;
-            }
-            return glm::vec3((r + m), (g + m), (b + m));
-        }
-        static float Dist(glm::vec2 one, glm::vec2 two) {
-            glm::vec2 squared = (two - one) * (two - one);
-            return sqrt(squared.x + squared.y);
-        }
-    }    
-
+    static void glColor(glm::vec3 color) {
+        glColor3f(color.x, color.y, color.z);
+    }
+    static void glColor(glm::vec4 color) {
+        glColor4f(color.x, color.y, color.z,color.w);
+    }
+    
     static GLFWwindow* InteractionWindow;
     
     //callbacks
@@ -158,6 +93,7 @@ namespace Graphics {
         std::function<void(GLFWwindow* wind, int sizeX, int sizeY)> Camera_function;
         std::function<void(GLFWwindow* wind, int sizeX, int sizeY)> Draw_function;
         std::function<void(GLFWwindow* wind, int sizeX, int sizeY)> GUI_function;
+        std::function<void(GLFWwindow* wind, int sizeX, int sizeY)> Update_function;
 
         std::vector<EventStream::Event> Events;
         std::vector<EventStream::EventProcessor*> EventProcessors;
@@ -239,9 +175,12 @@ namespace Graphics {
             // NOTE: OpenGL error checks have been omitted for brevity
 
             glEnable(GL_DEPTH_TEST); // Depth Testing
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             glDepthFunc(GL_LEQUAL);
             glDisable(GL_CULL_FACE);
             glCullFace(GL_BACK);
+            glewInit();
             return true;
         }
 
@@ -256,7 +195,8 @@ namespace Graphics {
                     // Draw stuff
                     glClearColor(0.0, 00, 00, 1.0);
                     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+                    //update here
+                    Update_function(window, windowWidth, windowHeight);
                     glMatrixMode(GL_PROJECTION_MATRIX);
                     glLoadIdentity();
                     //transform world here
@@ -303,6 +243,9 @@ namespace Graphics {
         };
         void Set_GUI_function(std::function<void(GLFWwindow* wind, int sizeX, int sizeY)>gf) {
             GUI_function = gf;
+        };
+        void Set_Update_function(std::function<void(GLFWwindow* wind, int sizeX, int sizeY)>gf) {
+            Update_function = gf;
         };
     };
 
@@ -448,6 +391,8 @@ namespace Graphics {
             public:
                 Cube();
                 ~Cube();
+                bool Within(glm::vec3 point);
+                std::vector<glm::vec3> Within(Cube other);
             };
 			class Pyramid :public Mesh {
 			public:

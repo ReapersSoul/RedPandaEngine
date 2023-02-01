@@ -262,12 +262,15 @@ public:
 		{
 		case 1:
 			toyManager->SendCommand(ID.c_str(), CLovenseToy::CmdType::COMMAND_VIBRATE1, level);
+			vibration_level = level;
 			break;
 		case 2:
 			toyManager->SendCommand(ID.c_str(), CLovenseToy::CmdType::COMMAND_VIBRATE2, level);
+			vibration_level_2 = level;
 			break;
 		default:
 			toyManager->SendCommand(ID.c_str(), CLovenseToy::CmdType::COMMAND_VIBRATE, level);
+			vibration_level = level;
 			break;
 		}
 	}
@@ -383,12 +386,15 @@ public:
 		{
 		case 1:
 			toyManager->SendCommand(ID.c_str(), CLovenseToy::CmdType::COMMAND_VIBRATE1, level);
+			vibration_level = level;
 			break;
 		case 2:
 			toyManager->SendCommand(ID.c_str(), CLovenseToy::CmdType::COMMAND_VIBRATE2, level);
+			vibration_level_2 = level;
 			break;
 		default:
 			toyManager->SendCommand(ID.c_str(), CLovenseToy::CmdType::COMMAND_VIBRATE, level);
+			vibration_level = level;
 			break;
 		}
 		while (!RequestVibrate_Returned) {
@@ -483,15 +489,12 @@ public:
 				break;
 			case CLovenseToy::CmdType::COMMAND_VIBRATE:
 				RequestVibrate_Returned = true;
-				vibration_level = atoi(result);
 				break;
 			case CLovenseToy::CmdType::COMMAND_VIBRATE1:
 				RequestVibrate_Returned = true;
-				vibration_level = atoi(result);
 				break;
 			case CLovenseToy::CmdType::COMMAND_VIBRATE2:
 				RequestVibrate_Returned = true;
-				vibration_level_2 = atoi(result);
 				break;
 			case CLovenseToy::CmdType::COMMAND_POWER_OFF:
 				RequestShutOff_Returned = true;

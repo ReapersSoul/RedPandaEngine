@@ -3,6 +3,7 @@
 
 std::vector<glm::vec3> Graphics::MeshTools::Mesh::ApplyTransform()
 {
+	
     return std::vector<glm::vec3>();
 }
 
@@ -63,6 +64,22 @@ Graphics::MeshTools::Shapes::Cube::Cube()
 
 Graphics::MeshTools::Shapes::Cube::~Cube()
 {
+}
+
+bool Graphics::MeshTools::Shapes::Cube::Within(glm::vec3 point)
+{
+	if (point.x >= Verts[0].x && point.x <= Verts[6].x && point.y >= Verts[0].y && point.y <= Verts[6].y && point.z >= Verts[0].z && point.z <= Verts[6].z) {
+		return true;
+	}
+	return false;	
+}
+
+std::vector<glm::vec3> Graphics::MeshTools::Shapes::Cube::Within(Cube other)
+{
+	if (Within(other.Verts[0]) || Within(other.Verts[1]) || Within(other.Verts[2]) || Within(other.Verts[3]) || Within(other.Verts[4]) || Within(other.Verts[5]) || Within(other.Verts[6]) || Within(other.Verts[7])) {
+		return other.Verts;
+	}	
+	return std::vector<glm::vec3>();
 }
 
 Graphics::MeshTools::Shapes::Triangle::Triangle()
