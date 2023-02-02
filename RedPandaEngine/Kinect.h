@@ -18,17 +18,38 @@ namespace Kinect {
 	class Skeleton {
 		glm::vec4 joints[20];
 		Bone bones[19];
+		bool tracked;
+		int NotTrackedCount=0;
+		int NotTrackedThreshold = 10;
 	public:
 		void Update(NUI_SKELETON_DATA data) {
 			for (int i = 0; i < NUI_SKELETON_POSITION_COUNT; i++)
 			{
 				joints[i] = glm::vec4(data.SkeletonPositions[i].x, data.SkeletonPositions[i].y, data.SkeletonPositions[i].z, data.SkeletonPositions[i].w);
 			}
+			if (data.eTrackingState == NUI_SKELETON_TRACKED) {
+				tracked = true;
+			}
+			else {
+				if (NotTrackedCount == NotTrackedThreshold) {
+					NotTrackedCount = 0;
+					tracked = false;
+				}
+				else {
+					NotTrackedCount++;
+				}
+			}
 		}
+		bool IsTracked() {
+			return tracked;
+		}
+
 		glm::vec4 GetJoint(int i) {
 			return joints[i];
 		}
-
+		glm::vec4* GetJointRef(int i) {
+			return &joints[i];
+		}
 		void DrawJoints(float PointSize,std::function<glm::vec4(glm::vec4 point)> call) {
 			glPointSize(PointSize);
 			glBegin(GL_POINTS);

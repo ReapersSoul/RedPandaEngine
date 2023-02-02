@@ -10,6 +10,7 @@
 //#include "Python.h"
 //#include "Language_Manager.h"
 #include "Lovense_Device.h"
+#include "Physics.h"
 #include "Kinect.h"
 #include "util.h"
 
@@ -17,7 +18,8 @@ ToyManager tm;
 
 Graphics::Window window("RedPandaEngine");
 
-float cam_x = 3, cam_y = 3, cam_z = 3;
+float cam_R = 3, StickX = 0, StickY = 0,speed=1;
+float cam_X = 0, cam_Y = 0, cam_Z = 0;
 int level = 0;
 int seconds=0;
 char buff[255] = { 0 };
@@ -36,8 +38,32 @@ GLuint renderBuffer;
 GLuint texture;
 float color = 0;
 Graphics::MeshTools::Shapes::Cube cube;
+Physics::World world;
 
 Kinect::Skeleton skeletons[NUI_SKELETON_COUNT];
+
+float clamp(float val, float min, float max) {
+	if (val < min) {
+		return min;
+	}
+	if (val > max) {
+		return max;
+	}
+	return val;
+}
+
+glm::vec3 PointOnSphere(float radius, float SitckX, float StickY) {
+	glm::vec3 point = { 0,0,1 };
+	//glm::rotate
+	glm::vec4 returnpoint = glm::rotate(glm::mat4(1), StickX, glm::vec3(0, 1, 0)) * glm::vec4(point, 1);
+	if (StickX > 0) {
+		returnpoint = glm::rotate(glm::mat4(1), -StickY, glm::vec3(1, 0, 0)) * returnpoint;
+	}
+	else {
+		returnpoint = glm::rotate(glm::mat4(1), StickY, glm::vec3(1, 0, 0)) * returnpoint;
+	}
+	return glm::vec3(returnpoint)*radius;
+}
 
 
 void Update(GLFWwindow* wind, int Window_Width, int Window_Height) {
@@ -55,6 +81,18 @@ void Update(GLFWwindow* wind, int Window_Width, int Window_Height) {
 				}
 			}
 		}
+		
+		//use left stick to move camera position based on where cam is looking
+		//check deadzone
+		if (axis[GLFW_GAMEPAD_AXIS_LEFT_Y] > 0.1 || axis[GLFW_GAMEPAD_AXIS_LEFT_Y] < -0.1) {
+			glm::vec3 camPos = PointOnSphere(1, StickX, StickY) * glm::vec3(axis[GLFW_GAMEPAD_AXIS_LEFT_Y]);
+			cam_X += camPos.x;
+			cam_Y += camPos.y;
+			cam_Z += camPos.z;
+		}
+
+		
+		
 	}
 	
 	//draw kinect camera depth
@@ -257,9 +295,8 @@ void GUI(GLFWwindow* wind, int Window_Width, int Window_Height) {
 	}
 	ImGui::End();
 	if (ImGui::Begin("Camera")) {
-		ImGui::DragFloat("Camera X", &cam_x, 0.1f);
-		ImGui::DragFloat("Camera Y", &cam_y, 0.1f);
-		ImGui::DragFloat("Camera Z", &cam_z, 0.1f);
+		ImGui::DragFloat("Camera Radius", &cam_R, 0.1f);
+		ImGui::DragFloat("Camera speed", &speed, 0.1f);
 	}
 	ImGui::End();
 }
@@ -267,7 +304,20 @@ void GUI(GLFWwindow* wind, int Window_Width, int Window_Height) {
 void Camera(GLFWwindow* wind, int Window_Width, int Window_Height) {
     //CAMERA STUFF
 	gluPerspective(45, (float)Window_Width / (float)Window_Height, 0.1, 1000);
-	gluLookAt(cam_x, cam_y, cam_z, 0, 0, 0, 0, 1, 0);
+	if (glfwJoystickPresent(GLFW_JOYSTICK_1)) {
+		//get right stick
+		int count = 0;
+		const float* axis = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &count);
+		StickX = Util::map<float>(axis[GLFW_GAMEPAD_AXIS_RIGHT_X], -1, 1, -M_PI, M_PI);
+		if (axis[GLFW_GAMEPAD_AXIS_RIGHT_X] > 0) {
+			StickY = Util::map<float>(axis[GLFW_GAMEPAD_AXIS_RIGHT_Y], -1, 1, M_PI, -M_PI);
+		}
+		else {
+			StickY = Util::map<float>(axis[GLFW_GAMEPAD_AXIS_RIGHT_Y], -1, 1, -M_PI, M_PI);
+		}
+	}
+	glm::vec3 campos = PointOnSphere(cam_R, StickX, StickY) + glm::vec3(cam_X, cam_Y, cam_Z);
+	gluLookAt(campos.x, campos.y, campos.z, cam_X, cam_Y, cam_Z, 0, 1, 0);
 }
 
 void DrawXYZGrid(float from, float to, int resolution, float lineWidth) {
@@ -378,7 +428,18 @@ class MainEventProcessor : public EventStream::EventProcessor {
 int main()
 {
 	::ShowWindow(::GetConsoleWindow(), SW_HIDE);
-	
+
+	for (int i = 0; i < NUI_SKELETON_COUNT; i++)
+	{
+			for (int j = 0; j < NUI_SKELETON_POSITION_COUNT; j++) {
+				world.Add(new Physics::LinkedCollisionPointVec4(skeletons[i].GetJointRef(j), [i](Physics::CollisionObject* obj) {
+					if(skeletons[i].IsTracked())
+					PLOGD_(Util::Logs::Debug) << "Collision";
+					}));
+			}
+	}
+	world.Add(new Physics::CollisionBox({0,0,0}, {1,1,1}));
+
 	sensor.setAngle(10);
 	sensor.setAngle(0);
 	Graphics::SetCallBackWindow(&window);

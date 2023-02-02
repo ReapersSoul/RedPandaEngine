@@ -152,6 +152,7 @@
     <ClCompile Include="G:\SDKs\imgui\imgui_tables.cpp" />
     <ClCompile Include="G:\SDKs\imgui\imgui_widgets.cpp" />
     <ClCompile Include="Graphics.cpp" />
+    <ClCompile Include="Physics.cpp" />
     <ClCompile Include="RedPandaEngine.cpp" />
     <ClCompile Include="util.cpp" />
   </ItemGroup>
@@ -176,6 +177,7 @@
     <ClInclude Include="Lovense_Device.h" />
     <ClInclude Include="Lua.h" />
     <ClInclude Include="Native.h" />
+    <ClInclude Include="Physics.h" />
     <ClInclude Include="Python.h" />
     <ClInclude Include="Language_Manager.h" />
     <ClInclude Include="Language.h" />

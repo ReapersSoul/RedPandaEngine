@@ -43,6 +43,9 @@
     <Filter Include="Header Files\Scripting Languages\Language Bases">
       <UniqueIdentifier>{b3da00be-37e7-4e21-98e3-cd1611e1419b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Physics">
+      <UniqueIdentifier>{c4d527e5-db80-4f24-b7d0-3a5b0a563db2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RedPandaEngine.cpp">
@@ -77,6 +80,9 @@
     </ClCompile>
     <ClCompile Include="Graphics.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Physics.cpp">
+      <Filter>Header Files\Physics</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -154,6 +160,9 @@
     </ClInclude>
     <ClInclude Include="VirtualMachineLanguage.h">
       <Filter>Header Files\Scripting Languages\Language Bases</Filter>
+    </ClInclude>
+    <ClInclude Include="Physics.h">
+      <Filter>Header Files\Physics</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

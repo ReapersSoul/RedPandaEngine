@@ -100,12 +100,6 @@ namespace Util {
         glm::vec3 rgb = HSVtoRGB(H, S, V);
         return glm::vec4(rgb.x, rgb.y, rgb.z, A);
     }
-
-    static float Dist(glm::vec2 one, glm::vec2 two) {
-        glm::vec2 squared = (two - one) * (two - one);
-        return sqrt(squared.x + squared.y);
-    }
-
     //lerp template
 	template<typename T>
 	T lerp(T a, T b, float t) {
