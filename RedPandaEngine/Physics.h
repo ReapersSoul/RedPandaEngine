@@ -11,8 +11,11 @@ namespace Physics {
 	protected:
 		glm::vec3 position;
 		std::string name;
+		bool colliding = false;
 	public:
-		std::function<void(CollisionObject*)> onCollision;
+		std::function<void(CollisionObject* main, CollisionObject* other)> onCollision;
+		std::function<void(CollisionObject* main, CollisionObject* other)> onEnterCollision;
+		std::function<void(CollisionObject* main, CollisionObject* other)> onExitCollision;
 		virtual void CheckCollision(CollisionObject*);
 		std::string GetName();
 		glm::vec3 GetPos();
@@ -42,14 +45,14 @@ namespace Physics {
 	class LinkedCollisionPointVec3 :public CollisionObject {
 		glm::vec3* point;
 	public:
-		LinkedCollisionPointVec3(glm::vec3*, std::function<void(CollisionObject*)> oncol);
+		LinkedCollisionPointVec3(glm::vec3*);
 		void CheckCollision(CollisionObject*);
 	};
 
 	class LinkedCollisionPointVec4 :public CollisionObject {
 		glm::vec4* point;
 	public:
-		LinkedCollisionPointVec4(glm::vec4*, std::function<void(CollisionObject*)> oncol);
+		LinkedCollisionPointVec4(glm::vec4*);
 		void CheckCollision(CollisionObject*);
 	};
 	

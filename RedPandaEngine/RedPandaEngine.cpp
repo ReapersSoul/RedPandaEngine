@@ -18,8 +18,9 @@ ToyManager tm;
 
 Graphics::Window window("RedPandaEngine");
 
-float cam_R = 3, StickX = 0, StickY = 0,speed=1;
+float cam_R = 3, cam_Angle_X = 0, cam_Angle_Y = 0, speed = 1, rotspeed = .1;
 float cam_X = 0, cam_Y = 0, cam_Z = 0;
+float camk[3]={0};
 int level = 0;
 int seconds=0;
 char buff[255] = { 0 };
@@ -42,30 +43,6 @@ Physics::World world;
 
 Kinect::Skeleton skeletons[NUI_SKELETON_COUNT];
 
-float clamp(float val, float min, float max) {
-	if (val < min) {
-		return min;
-	}
-	if (val > max) {
-		return max;
-	}
-	return val;
-}
-
-glm::vec3 PointOnSphere(float radius, float SitckX, float StickY) {
-	glm::vec3 point = { 0,0,1 };
-	//glm::rotate
-	glm::vec4 returnpoint = glm::rotate(glm::mat4(1), StickX, glm::vec3(0, 1, 0)) * glm::vec4(point, 1);
-	if (StickX > 0) {
-		returnpoint = glm::rotate(glm::mat4(1), -StickY, glm::vec3(1, 0, 0)) * returnpoint;
-	}
-	else {
-		returnpoint = glm::rotate(glm::mat4(1), StickY, glm::vec3(1, 0, 0)) * returnpoint;
-	}
-	return glm::vec3(returnpoint)*radius;
-}
-
-
 void Update(GLFWwindow* wind, int Window_Width, int Window_Height) {
 	if (glfwJoystickPresent(GLFW_JOYSTICK_1)) {
 		int count;
@@ -81,83 +58,80 @@ void Update(GLFWwindow* wind, int Window_Width, int Window_Height) {
 				}
 			}
 		}
-		
+		glm::vec3 camPos=glm::vec3(0);
 		//use left stick to move camera position based on where cam is looking
 		//check deadzone
-		if (axis[GLFW_GAMEPAD_AXIS_LEFT_Y] > 0.1 || axis[GLFW_GAMEPAD_AXIS_LEFT_Y] < -0.1) {
-			glm::vec3 camPos = PointOnSphere(1, StickX, StickY) * glm::vec3(axis[GLFW_GAMEPAD_AXIS_LEFT_Y]);
-			cam_X += camPos.x;
-			cam_Y += camPos.y;
-			cam_Z += camPos.z;
+		if (axis[GLFW_GAMEPAD_AXIS_LEFT_Y] > 0.1 || axis[GLFW_GAMEPAD_AXIS_LEFT_Y] < -0.1|| axis[GLFW_GAMEPAD_AXIS_LEFT_X] > 0.1 || axis[GLFW_GAMEPAD_AXIS_LEFT_X] < -0.) {
+			camPos = Util::PointOnSphere(1, cam_Angle_X, cam_Angle_Y) * glm::vec3(axis[GLFW_GAMEPAD_AXIS_LEFT_Y])*speed;
+			float tmp = camPos.x;
+			camPos.x = camPos.y;
+			camPos.y = tmp;
 		}
-
+		cam_X += camPos.x;
+		cam_Y += camPos.y;
+		cam_Z += camPos.z;
 		
 		
 	}
 	
-	//draw kinect camera depth
-	sensor.getDepthFrame([](void* data, int size) {
-		delete ImageBuffer1;
-		ImageBuffer1 = malloc(size);
-		memcpy(ImageBuffer1, data, size);
-		});
-	//bind image to texture id
-	glDeleteTextures(1, &TextureID);
-	glGenTextures(1, &TextureID);
-	glBindTexture(GL_TEXTURE_2D, TextureID);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 640, 480, 0, GL_RGBA, GL_UNSIGNED_BYTE, ImageBuffer1);
+	if (sensor.IsInit()) {
+		//draw kinect camera depth
+		sensor.getDepthFrame([](void* data, int size) {
+			delete ImageBuffer1;
+			ImageBuffer1 = malloc(size);
+			memcpy(ImageBuffer1, data, size);
+			});
+		//bind image to texture id
+		glDeleteTextures(1, &TextureID);
+		glGenTextures(1, &TextureID);
+		glBindTexture(GL_TEXTURE_2D, TextureID);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 640, 480, 0, GL_RGBA, GL_UNSIGNED_BYTE, ImageBuffer1);
 
 
-	//draw kinect camera color
+		//draw kinect camera color
+		glPushMatrix();
+		//sensor.getColorFrame([](void* data, int size) {
+		//	delete ImageBuffer2;
+		//	ImageBuffer2 = malloc(size);
+		//	memcpy(ImageBuffer2, data, size);
+		//	});
+		//render to frame buffer
+		glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
+		glViewport(0, 0, 1280, 960);
+		glClearColor(0.0, 00, 00, 1.0);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		//bind image to texture id
+		glBindTexture(GL_TEXTURE_2D, texture);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1280, 960, 0, GL_BGRA, GL_UNSIGNED_BYTE, ImageBuffer2);
+		// Draw stuff
 
-	glPushMatrix();
-	sensor.getColorFrame([](void* data, int size) {
-		delete ImageBuffer2;
-		ImageBuffer2 = malloc(size);
-		memcpy(ImageBuffer2, data, size);
-		});
-	//render to frame buffer
-	glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
-	glViewport(0, 0, 1280, 960);
-	glClearColor(0.0, 00, 00, 1.0);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	//bind image to texture id
-	glBindTexture(GL_TEXTURE_2D, texture);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1280, 960, 0, GL_BGRA, GL_UNSIGNED_BYTE, ImageBuffer2);
-	// Draw stuff
+		glMatrixMode(GL_PROJECTION_MATRIX);
+		glLoadIdentity();
+		gluPerspective(45, (float)1280 / (float)960, 0.1, 1000);
+		gluLookAt(camk[0], camk[1], camk[2], 0, 0, 0, 0, 1, 0);
+		//glTranslated(-1, 0, 0);
+		glMatrixMode(GL_MODELVIEW_MATRIX);
 
-	glMatrixMode(GL_PROJECTION_MATRIX);
-	glLoadIdentity();
-	gluPerspective(45, (float)1280 / (float)960, 0.1, 1000);
-	gluLookAt(0,0, -1, 0, 0, 0, 0, 1, 0);
-	glTranslated(0, 0, -1);
-	glMatrixMode(GL_MODELVIEW_MATRIX);
-	
-	//get Skeleton and draw
-	NUI_SKELETON_FRAME  frame = sensor.getSkeletonFrame();
-	for (int i = 0; i < NUI_SKELETON_COUNT; i++)
-	{
-		if (frame.SkeletonData[i].eTrackingState == NUI_SKELETON_TRACKED) {
-			skeletons[i].Update(frame.SkeletonData[i]);
-		}
-		glPointSize(10);
-		glBegin(GL_POINTS);
-		for (int j = 0; j < NUI_SKELETON_POSITION_COUNT; j++)
+		//get Skeleton and draw
+		NUI_SKELETON_FRAME  frame = sensor.getSkeletonFrame();
+		for (int i = 0; i < NUI_SKELETON_COUNT; i++)
 		{
-			glm::vec3 point = glm::vec3(skeletons[i].GetJoint(j).x, skeletons[i].GetJoint(j).y, skeletons[i].GetJoint(j).z);
-			Graphics::glColor(Util::HSVtoRGB(360/(i+1), 100, 100));
-
-			glVertex3f(-point.x, -point.y, point.z);
+			if (frame.SkeletonData[i].eTrackingState == NUI_SKELETON_TRACKED) {
+				skeletons[i].Update(frame.SkeletonData[i]);
+			}
+			skeletons->DrawJoints(10, [&i](glm::vec4 p) {
+				Graphics::glColor(Util::HSVtoRGB(360 / (i + 1), 100, 100));
+				return p;
+				});
 		}
-		glEnd();
 	}
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glViewport(0, 0, Window_Width, Window_Height);
@@ -198,6 +172,13 @@ void GUI(GLFWwindow* wind, int Window_Width, int Window_Height) {
 				}
 				ImGui::EndTabItem();
 			}
+			if (ImGui::BeginTabItem("Kinect")) {
+				for (int i = 0; i < KinectLog.getMessageList().size(); i++)
+				{
+					ImGui::TextUnformatted(KinectLog.getMessageList()[i].c_str());
+				}
+				ImGui::EndTabItem();
+			}
 			ImGui::EndTabBar();
 		}
 	}
@@ -207,7 +188,8 @@ void GUI(GLFWwindow* wind, int Window_Width, int Window_Height) {
 		ImGui::Checkbox("Draw Grid", &DrawGrid);
 
 		//radio
-		static int ViewMode = 0;
+		static int ViewMode = 2;
+		ImGui::RadioButton("None", &ViewMode, 2);
 		ImGui::RadioButton("Vibrate Collision", &ViewMode, 0);
 		ImGui::RadioButton("Vibrate Controller", &ViewMode, 1);
 		switch (ViewMode)
@@ -229,17 +211,18 @@ void GUI(GLFWwindow* wind, int Window_Width, int Window_Height) {
 	ImGui::End();
 
 	if (ImGui::Begin("Kinect")) {
-		//angle
-		static float angle = sensor.getAngle();
-		ImGui::InputFloat("angle", &angle);
-		if (angle != sensor.getAngle()) {
-			sensor.setAngle(angle);
+		if (sensor.IsInit()) {
+			//angle
+			static float angle = sensor.getAngle();
+			ImGui::InputFloat("angle", &angle);
+			if (angle != sensor.getAngle()) {
+				sensor.setAngle(angle);
+			}
+
+			ImGui::Image((void*)(intptr_t)TextureID, ImVec2(640, 480));
+			ImGui::DragFloat3("XYZ", camk, .1);
+			ImGui::Image((void*)texture, ImVec2(1280, 960));
 		}
-		
-		ImGui::Image((void*)(intptr_t)TextureID, ImVec2(640,480));		
-
-		ImGui::Image((void*)texture, ImVec2(1280, 960));
-
 	}
 	ImGui::End();
 
@@ -296,7 +279,8 @@ void GUI(GLFWwindow* wind, int Window_Width, int Window_Height) {
 	ImGui::End();
 	if (ImGui::Begin("Camera")) {
 		ImGui::DragFloat("Camera Radius", &cam_R, 0.1f);
-		ImGui::DragFloat("Camera speed", &speed, 0.1f);
+		ImGui::DragFloat("Camera Speed", &speed, 0.1f);
+		ImGui::DragFloat("Camera Rotation Speed", &rotspeed, 0.1f);
 	}
 	ImGui::End();
 }
@@ -308,15 +292,12 @@ void Camera(GLFWwindow* wind, int Window_Width, int Window_Height) {
 		//get right stick
 		int count = 0;
 		const float* axis = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &count);
-		StickX = Util::map<float>(axis[GLFW_GAMEPAD_AXIS_RIGHT_X], -1, 1, -M_PI, M_PI);
-		if (axis[GLFW_GAMEPAD_AXIS_RIGHT_X] > 0) {
-			StickY = Util::map<float>(axis[GLFW_GAMEPAD_AXIS_RIGHT_Y], -1, 1, M_PI, -M_PI);
-		}
-		else {
-			StickY = Util::map<float>(axis[GLFW_GAMEPAD_AXIS_RIGHT_Y], -1, 1, -M_PI, M_PI);
+		if (axis[GLFW_GAMEPAD_AXIS_RIGHT_X] > .1 || axis[GLFW_GAMEPAD_AXIS_RIGHT_X] < -.1|| axis[GLFW_GAMEPAD_AXIS_RIGHT_Y] > .1 || axis[GLFW_GAMEPAD_AXIS_RIGHT_Y] < -.1){
+			cam_Angle_X += Util::map<float>(axis[GLFW_GAMEPAD_AXIS_RIGHT_X], -1, 1, -M_PI, M_PI)*rotspeed;
+			cam_Angle_Y += Util::map<float>(axis[GLFW_GAMEPAD_AXIS_RIGHT_Y], -1, 1, M_PI, -M_PI)*rotspeed;
 		}
 	}
-	glm::vec3 campos = PointOnSphere(cam_R, StickX, StickY) + glm::vec3(cam_X, cam_Y, cam_Z);
+	glm::vec3 campos = Util::PointOnSphere(cam_R, cam_Angle_X, cam_Angle_Y) + glm::vec3(cam_X, cam_Y, cam_Z);
 	gluLookAt(campos.x, campos.y, campos.z, cam_X, cam_Y, cam_Z, 0, 1, 0);
 }
 
@@ -363,26 +344,21 @@ void Draw(GLFWwindow* wind, int Window_Width, int Window_Height) {
 	//draw cube in top right
 	glPushMatrix();
 
-	//get Skeleton and draw
-	for (int i = 0; i < NUI_SKELETON_COUNT; i++)
-	{
-		skeletons[i].DrawJoints(10, [](glm::vec4 point) {
-			glm::vec4 ret = point - glm::vec4(0, 0, 2, 0);;
-			if (cube.Within(ret)) {
-				tm.VibrateAll(1);
+	if (sensor.IsInit()) {
+		//get Skeleton and draw
+		for (int i = 0; i < NUI_SKELETON_COUNT; i++)
+		{
+			skeletons[i].DrawAppliedJoints(10, [](glm::vec4 point) {
 				Graphics::glColor(Util::HSVtoRGBA(360, 0, 100, 1));
-			}
-			else {
-				Graphics::glColor(Util::HSVtoRGBA(360, 100, 100, 1));
-				tm.VibrateAll(0);
-			}
-			return ret;
-			});
+				return point;
+				});
+		}
 	}
 	Graphics::glColor(Util::HSVtoRGBA(color, 53, 66, .25));
 	cube.Draw();
 	glPopMatrix();
 }
+
 void InitFrameBuffer() {
 	//setup frame buffer, render buffer, and texture
 	glGenFramebuffers(1, &frameBuffer);
@@ -420,7 +396,6 @@ class MainEventProcessor : public EventStream::EventProcessor {
 				PLOGD_(Util::Logs::Debug) << "Joy";
 			}
 		}
-
 		return true;
 	};
 };
@@ -432,16 +407,30 @@ int main()
 	for (int i = 0; i < NUI_SKELETON_COUNT; i++)
 	{
 			for (int j = 0; j < NUI_SKELETON_POSITION_COUNT; j++) {
-				world.Add(new Physics::LinkedCollisionPointVec4(skeletons[i].GetJointRef(j), [i](Physics::CollisionObject* obj) {
-					if(skeletons[i].IsTracked())
-					PLOGD_(Util::Logs::Debug) << "Collision";
-					}));
+				Physics::LinkedCollisionPointVec4* p = new Physics::LinkedCollisionPointVec4(skeletons[i].GetAppliedJointRef(j));
+				p->onEnterCollision = [i](Physics::CollisionObject* main, Physics::CollisionObject* other) {
+					if (skeletons[i].IsTracked() && other->GetName() == "BOX")
+						PLOGD_(Util::Logs::Debug) << "Entered Collision!";
+				};
+				p->onExitCollision = [i](Physics::CollisionObject* main, Physics::CollisionObject* other) {
+					if (skeletons[i].IsTracked() && other->GetName() == "BOX")
+						PLOGD_(Util::Logs::Debug) << "Exited Collision!";
+				};
+				p->onCollision = [i](Physics::CollisionObject* main, Physics::CollisionObject* other) {
+					//if (skeletons[i].IsTracked() && other->GetName()=="BOX")
+						//PLOGD_(Util::Logs::Debug) << "Collision!";
+				};
+				world.Add(p);
 			}
+			skeletons[i].SetPosition({ 0,0,-2 });
+			skeletons[i].SetScale({ 1,1,1 });
 	}
 	world.Add(new Physics::CollisionBox({0,0,0}, {1,1,1}));
 
-	sensor.setAngle(10);
-	sensor.setAngle(0);
+	if (sensor.Init()) {
+		sensor.setAngle(10);
+		sensor.setAngle(0);
+	}
 	Graphics::SetCallBackWindow(&window);
 	window.AddEventProcessor(new MainEventProcessor());
 	window.Set_Update_function(Update);
@@ -454,6 +443,7 @@ int main()
 	
 	Util::Logs::InitLogs();
 	InitLovenseLog();
+	InitKinectLog();
 	//render to screen	
 	window.Loop();
 	window.CleanUp();

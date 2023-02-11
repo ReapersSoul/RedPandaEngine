@@ -291,7 +291,7 @@ public:
 	}
 
 	void RequestConnect() {
-		toyManager->ConnectToToy(ID.c_str());
+			toyManager->ConnectToToy(ID.c_str());
 	}
 	void RequestDisConnect() {
 		toyManager->DisConnectedToy(ID.c_str());

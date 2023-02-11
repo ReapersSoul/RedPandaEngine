@@ -21,7 +21,7 @@ namespace Physics {
 				position.z < box->GetPos().z + box->GetSize().z &&
 				position.z + size.z > box->GetPos().z && onCollision)
 			{
-				onCollision(other);
+				onCollision(this, other);
 			}
 		}
 		else if (other->GetName() == "SPHERE") {
@@ -54,7 +54,7 @@ namespace Physics {
 			glm::vec3 distance = sphere->GetPos() - closestPoint;
 			if (glm::length(distance) < sphere->GetRad() && onCollision)
 			{
-				onCollision(other);
+				onCollision(this, other);
 			}
 		}
 	}
@@ -94,7 +94,7 @@ namespace Physics {
 			float distance = glm::distance(position, sphere->GetPos());
 			if (distance <= radius + sphere->GetRad() && onCollision)
 			{
-				onCollision(other);
+				onCollision(this,other);
 			}
 		}
 	}
@@ -147,10 +147,9 @@ namespace Physics {
 	{
 		objects.push_back(obj);
 	}
-	LinkedCollisionPointVec3::LinkedCollisionPointVec3(glm::vec3* p, std::function<void(CollisionObject*)> oncol)
+	LinkedCollisionPointVec3::LinkedCollisionPointVec3(glm::vec3* p)
 	{
 		point = p;
-		onCollision = oncol;
 	}
 	void LinkedCollisionPointVec3::CheckCollision(CollisionObject* other)
 	{
@@ -159,37 +158,49 @@ namespace Physics {
 			CollisionBox* box = (CollisionBox*)other;
 			if (box->Inside(*point) && onCollision)
 			{
-				onCollision(other);
+				onCollision(this,other);
 			}
 		}
 		else if (other->GetName() == "SPHERE") {
 			CollisionSphere* sphere = (CollisionSphere*)other;
 			if (glm::distance(*point, sphere->GetPos()) < sphere->GetRad() && onCollision)
 			{
-				onCollision(other);
+				onCollision(this,other);
 			}
 		}
 	}
-	LinkedCollisionPointVec4::LinkedCollisionPointVec4(glm::vec4* p, std::function<void(CollisionObject*)> oncol)
+	LinkedCollisionPointVec4::LinkedCollisionPointVec4(glm::vec4* p)
 	{
 		point = p;
-		onCollision = oncol;
 	}
 	void LinkedCollisionPointVec4::CheckCollision(CollisionObject* other)
 	{
 		if (other->GetName() == "BOX")
 		{
 			CollisionBox* box = (CollisionBox*)other;
-			if (box->Inside(glm::vec3(point->x, point->y, point->z))&&onCollision)
+			if (box->Inside(glm::vec3(point->x, point->y, point->z)))
 			{
-				onCollision(other);
+				if (!colliding) {
+					colliding = true;
+					if (onEnterCollision)
+					onEnterCollision(this,other);
+				}
+				if (onCollision)
+				onCollision(this,other);
+			}
+			else {
+				if (colliding) {
+					colliding = false;
+					if (onExitCollision)
+					onExitCollision(this,other);
+				}
 			}
 		}
 		else if (other->GetName() == "SPHERE") {
 			CollisionSphere* sphere = (CollisionSphere*)other;
 			if (glm::distance(glm::vec3(point->x, point->y, point->z), sphere->GetPos()) < sphere->GetRad() && onCollision)
 			{
-				onCollision(other);
+				onCollision(this,other);
 			}
 		}
 	}

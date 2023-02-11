@@ -37,6 +37,29 @@ namespace plog {
 }
 
 namespace Util {
+    float clamp(float val, float min, float max) {
+        if (val < min) {
+            return min;
+        }
+        if (val > max) {
+            return max;
+        }
+        return val;
+    }
+
+    glm::vec3 PointOnSphere(float radius, float StickX, float StickY) {
+        glm::vec3 point = { 0,1,0 };
+        //glm::rotate
+        glm::vec4 returnpoint = glm::rotate(glm::mat4(1), StickY, glm::vec3(1, 0, 0)) * glm::vec4(point, 1);
+        if (StickX > 0) {
+            returnpoint = glm::rotate(glm::mat4(1), StickX, glm::vec3(0, 1, 0)) * returnpoint;
+        }
+        else {
+            returnpoint = glm::rotate(glm::mat4(1), StickX, glm::vec3(0, 1, 0)) * returnpoint;
+        }
+        return glm::vec3(returnpoint) * radius;
+    }
+
     template<typename T>
     T random(T range_from, T range_to) {
         std::random_device                  rand_dev;

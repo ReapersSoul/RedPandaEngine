@@ -9,6 +9,14 @@
 #include <vector>
 #include "util.h"
 
+#define L_Kinect 4
+
+static plog::VisibleAppender<plog::TxtFormatter> KinectLog;
+
+void InitKinectLog() {
+	plog::init<L_Kinect>(plog::verbose, new plog::RollingFileAppender<plog::TxtFormatter>("Kinect.log", 1000, 5)).addAppender(&KinectLog);
+}
+
 namespace Kinect {
 	class Bone {
 		glm::vec3 position;
@@ -16,16 +24,70 @@ namespace Kinect {
 		glm::vec3 scale;
 	};
 	class Skeleton {
+		glm::vec3 position, rotation, scale;
+		
 		glm::vec4 joints[20];
+		glm::vec4 AppliedJoints[20];
 		Bone bones[19];
+		Bone AppliedBones[19];
 		bool tracked;
 		int NotTrackedCount=0;
 		int NotTrackedThreshold = 10;
 	public:
+		//getters
+		glm::vec3 GetPosition() {
+			return position;
+		}
+
+		glm::vec3 GetRotation() {
+			return rotation;
+		}
+
+		glm::vec3 GetScale() {
+			return scale;
+		}
+		glm::vec4 GetJoint(int i) {
+			return joints[i];
+		}
+		glm::vec4* GetJointRef(int i) {
+			return &joints[i];
+		}
+		glm::vec4 GetAppliedJoint(int i) {
+			return AppliedJoints[i];
+		}
+		glm::vec4* GetAppliedJointRef(
+			int i) {
+			return &AppliedJoints[i];
+		}
+		//setters
+		void SetPosition(glm::vec3 pos) {
+			position = pos;
+		}
+		void SetRotation(glm::vec3 rot) {
+			rotation = rot;
+		}
+		void SetScale(glm::vec3 sca) {
+			scale = sca;
+		}
+		void SetJoint(int i, glm::vec4 pos) {
+			joints[i] = pos;
+		}
+		void SetAppliedJoint(int i, glm::vec4 pos) {
+			AppliedJoints[i] = pos;
+		}
+
+
 		void Update(NUI_SKELETON_DATA data) {
 			for (int i = 0; i < NUI_SKELETON_POSITION_COUNT; i++)
 			{
 				joints[i] = glm::vec4(data.SkeletonPositions[i].x, data.SkeletonPositions[i].y, data.SkeletonPositions[i].z, data.SkeletonPositions[i].w);
+				glm::mat4x4 matTransform(1);
+				matTransform = glm::scale(matTransform, scale);
+				matTransform = glm::rotate(matTransform, rotation.x, { 1,0,0 });
+				matTransform = glm::rotate(matTransform, rotation.y, { 0,1,0 });
+				matTransform = glm::rotate(matTransform, rotation.z, { 0,0,1 });
+				//rotate point
+				AppliedJoints[i] = (joints[i] * matTransform)+glm::vec4(position,0);
 			}
 			if (data.eTrackingState == NUI_SKELETON_TRACKED) {
 				tracked = true;
@@ -43,20 +105,19 @@ namespace Kinect {
 		bool IsTracked() {
 			return tracked;
 		}
-
-		glm::vec4 GetJoint(int i) {
-			return joints[i];
-		}
-		glm::vec4* GetJointRef(int i) {
-			return &joints[i];
-		}
 		void DrawJoints(float PointSize,std::function<glm::vec4(glm::vec4 point)> call) {
 			glPointSize(PointSize);
 			glBegin(GL_POINTS);
 			bool vib = false;
 			for (int j = 0; j < NUI_SKELETON_POSITION_COUNT; j++)
 			{
-				glm::vec4 point = call(joints[j]);
+				glm::vec4 point;
+				if (call) {
+					point = call(joints[j]);
+				}
+				else {
+					point = joints[j];
+				}
 				glVertex3f(point.x, point.y, point.z);
 			}
 			glEnd();
@@ -64,6 +125,24 @@ namespace Kinect {
 
 		void DrawBones(float LineWidth,std::function<Bone(Bone)> call) {
 
+		}
+
+		void DrawAppliedJoints(float PointSize, std::function<glm::vec4(glm::vec4 point)> call) {
+			glPointSize(PointSize);
+			glBegin(GL_POINTS);
+			bool vib = false;
+			for (int j = 0; j < NUI_SKELETON_POSITION_COUNT; j++)
+			{
+				glm::vec4 point;
+				if (call) {
+					point = call(AppliedJoints[j]);
+				}
+				else {
+					point = AppliedJoints[j];
+				}
+				glVertex3f(point.x, point.y, point.z);
+			}
+			glEnd();
 		}
 	};
 
@@ -74,26 +153,36 @@ namespace Kinect {
 		NUI_SKELETON_FRAME skeletonFrame;
 		NUI_IMAGE_FRAME colorFrame, depthFrame;
 		HANDLE NextColorFrameEvent, NextDepthFrameEvent;
+		bool IsInitialized=false;
 	public:
 		//constructor		
 		Sensor() {
+		}
+
+		//destructor
+		~Sensor() {
+			sensor->NuiShutdown();
+		}
+
+		bool Init() {
 			//get the sensor and check if successful
 			int numSensors = 0;
 			NuiGetSensorCount(&numSensors);
 			if (numSensors == 0) {
-				PLOGE_(Util::Logs::Error) << "No Kinect Sensor Found";
-				throw "No Kinect Sensor Found";
+				PLOGE_(L_Kinect) << "No Kinect Sensor Found";
+				IsInitialized = false;
+				return false;
 			}
 			NuiCreateSensorByIndex(0, &sensor);
 			//initialize the sensor
 			sensor->NuiInitialize(NUI_INITIALIZE_FLAG_USES_SKELETON | NUI_INITIALIZE_FLAG_USES_COLOR | NUI_INITIALIZE_FLAG_USES_DEPTH | NUI_INITIALIZE_FLAG_USES_AUDIO | NUI_INITIALIZE_FLAG_USES_DEPTH_AND_PLAYER_INDEX | NUI_INITIALIZE_FLAG_USES_HIGH_QUALITY_COLOR);
 			//open the sensor
 			NextColorFrameEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
-			sensor->NuiImageStreamOpen(NUI_IMAGE_TYPE_COLOR,NUI_IMAGE_RESOLUTION_1280x960,0,2,NextColorFrameEvent,&colorStream);
+			sensor->NuiImageStreamOpen(NUI_IMAGE_TYPE_COLOR, NUI_IMAGE_RESOLUTION_1280x960, 0, 2, NextColorFrameEvent, &colorStream);
 			NextDepthFrameEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
 
 			// Open a depth image stream to receive depth frames
-			HRESULT hr=sensor->NuiImageStreamOpen(
+			HRESULT hr = sensor->NuiImageStreamOpen(
 				NUI_IMAGE_TYPE_DEPTH,
 				NUI_IMAGE_RESOLUTION_640x480,
 				0,
@@ -102,11 +191,12 @@ namespace Kinect {
 				&depthStream);
 			sensor->NuiSkeletonTrackingEnable(NULL, 0);
 			sensor->NuiCameraElevationSetAngle(0);
+			IsInitialized = true;
+			return true;
 		}
 
-		//destructor
-		~Sensor() {
-			sensor->NuiShutdown();
+		bool IsInit() {
+			return IsInitialized;
 		}
 
 		//get the color frame
