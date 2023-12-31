@@ -28,3 +28,12 @@ target_link_libraries(${PROJECT_NAME} PUBLIC imgui::imgui)
 find_package(plog CONFIG REQUIRED)
 target_include_directories(${PROJECT_NAME} PUBLIC ${PLOG_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} PUBLIC plog::plog)
+
+#assimp
+find_package(assimp CONFIG REQUIRED)
+target_include_directories(${PROJECT_NAME} PUBLIC ${ASSIMP_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} PRIVATE assimp::assimp)
+
+#stb
+find_package(Stb REQUIRED)
+target_include_directories(${PROJECT_NAME} PRIVATE ${Stb_INCLUDE_DIR})

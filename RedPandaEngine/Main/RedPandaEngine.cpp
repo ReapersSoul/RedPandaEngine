@@ -5,29 +5,37 @@
 #include <string>
 #include <sstream>
 #include <vector>
+#include <filesystem>
 
+#define STB_IMAGE_IMPLEMENTATION
 #include <Graphics/Graphics.h>
-//#include "Lua.h"
-//#include "Python.h"
-//#include "Language_Manager.h"
-//#include <Devices/Lovense/Lovense_Device.h>
-//#include <Devices/Kinect/Kinect.h>
+// #include "Lua.h"
+// #include "Python.h"
+// #include "Language_Manager.h"
+// #include <Devices/Lovense/Lovense_Device.h>
+// #include <Devices/Kinect/Kinect.h>
 
 #include <Physics/Physics.h>
 
-//ToyManager tm;
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+
+// ToyManager tm;
 
 Graphics::Window window("RedPandaEngine");
 
-float cam_R = 3, cam_Angle_X = 0, cam_Angle_Y = 0, speed = 1, rotspeed = .1;
+bool InvertX = false;
+bool InvertY = false;
+float cam_R = 3, cam_Angle_X = .0001, cam_Angle_Y = .0001, speed = .01, rotspeed = .005;
 float cam_X = 0, cam_Y = 0, cam_Z = 0;
-float camk[3]={0};
+float camk[3] = {0};
 int level = 0;
-int seconds=0;
-char buff[255] = { 0 };
-char buff2[255]={0};
+int seconds = 0;
+char buff[255] = {0};
+char buff2[255] = {0};
 
-//Kinect::Sensor sensor;
+// Kinect::Sensor sensor;
 bool DrawGrid = true;
 // bool VibrateCollision = false;
 // bool VibeController = false;
@@ -42,13 +50,70 @@ float color = 0;
 Graphics::MeshTools::Shapes::Cube cube;
 Physics::World world;
 float Deadzone = 0.1f;
-//Kinect::Skeleton skeletons[NUI_SKELETON_COUNT];
+// Kinect::Skeleton skeletons[NUI_SKELETON_COUNT];
 
-void Update(GLFWwindow* wind, int Window_Width, int Window_Height) {
-	if (glfwJoystickPresent(GLFW_JOYSTICK_1)) {
+Assimp::Importer importer;
+const aiScene *scene;
+std::vector<GLuint> textures;
+
+void DrawModel()
+{
+	// load base.dae model using assimp and draw
+	if (!scene)
+	{
+		scene = importer.ReadFile("../../RedPandaEngine/Assets/base2.dae", aiProcess_Triangulate | aiProcess_FlipUVs);
+		if (!scene)
+		{
+			PLOGD_(Util::Logs::Error) << "Failed to load model! Current path: " << std::filesystem::current_path() << " asset path: " << std::filesystem::absolute("../../RedPandaEngine/Assets/base.dae");
+		}
+		for (int i = 0; i < scene->mNumMeshes; i++)
+		{
+			// load textures
+			aiString path;
+			scene->mMaterials[scene->mMeshes[i]->mMaterialIndex]->GetTexture(aiTextureType_DIFFUSE, 0, &path);
+			std::string texturePath = "../../RedPandaEngine/Assets/" + std::string(path.C_Str());
+			GLuint texture = Graphics::LoadTexture(texturePath.c_str());
+			textures.push_back(texture);
+		}
+	}
+	else
+	{
+		// draw model
+		for (int i = 0; i < scene->mNumMeshes; i++)
+		{
+			glEnable(GL_TEXTURE_2D);
+			glPushMatrix();
+			glRotatef(-90, 1, 0, 0);
+			glBindTexture(GL_TEXTURE_2D, textures[i]);
+			// draw mesh
+			const aiMesh *mesh = scene->mMeshes[i];
+			for (int j = 0; j < mesh->mNumFaces; j++)
+			{
+				const aiFace *face = &mesh->mFaces[j];
+				glBegin(GL_TRIANGLES);
+				for (int k = 0; k < 3; k++)
+				{
+					int index = face->mIndices[k];
+					glColor3f(1, 1, 1);
+					glNormal3f(mesh->mNormals[index].x, mesh->mNormals[index].y, mesh->mNormals[index].z);
+					glTexCoord2f(mesh->mTextureCoords[0][index].x, mesh->mTextureCoords[0][index].y);
+					glVertex3f(mesh->mVertices[index].x, mesh->mVertices[index].y, mesh->mVertices[index].z);
+				}
+				glEnd();
+			}
+			glBindTexture(GL_TEXTURE_2D, 0);
+			glPopMatrix();
+			glDisable(GL_TEXTURE_2D);
+		}
+	}
+}
+
+void Update(GLFWwindow *wind, int Window_Width, int Window_Height)
+{
+	if (glfwJoystickPresent(GLFW_JOYSTICK_1))
+	{
 		int count;
-		const float* axis = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &count);
-		color = Util::map<float>(axis[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER], -1, 1, 0, 360);
+		const float *axis = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &count);
 		// if (VibeController) {
 		// 	if (tm.GetToys().size() > 0) {
 		// 		if (tm.GetToy(0)->GetConnected()) {
@@ -59,22 +124,80 @@ void Update(GLFWwindow* wind, int Window_Width, int Window_Height) {
 		// 		}
 		// 	}
 		// }
-		glm::vec3 camPos=glm::vec3(0);
-		//use left stick to move camera position based on where cam is looking
-		//check deadzone
-		if (axis[GLFW_GAMEPAD_AXIS_LEFT_Y] > Deadzone || axis[GLFW_GAMEPAD_AXIS_LEFT_Y] < -Deadzone|| axis[GLFW_GAMEPAD_AXIS_LEFT_X] > Deadzone || axis[GLFW_GAMEPAD_AXIS_LEFT_X] < -Deadzone) {
-			camPos = Util::PointOnSphere(1, cam_Angle_X, cam_Angle_Y) * glm::vec3(axis[GLFW_GAMEPAD_AXIS_LEFT_Y])*speed;
-			float tmp = camPos.x;
-			camPos.x = camPos.y;
-			camPos.y = tmp;
+
+		// use left stick to move camera position based on where cam is looking
+		// check deadzone
+		if (axis[GLFW_GAMEPAD_AXIS_LEFT_Y] > Deadzone)
+		{
+			glm::vec3 camPosTranslation = Util::PointOnSphere(1, cam_Angle_X, cam_Angle_Y) * speed* axis[GLFW_GAMEPAD_AXIS_LEFT_Y];
+			cam_X += camPosTranslation.x;
+			cam_Y += camPosTranslation.y;
+			cam_Z += camPosTranslation.z;
 		}
-		cam_X += camPos.x;
-		cam_Y += camPos.y;
-		cam_Z += camPos.z;
-		
-		
+		else if (axis[GLFW_GAMEPAD_AXIS_LEFT_Y] < -Deadzone)
+		{
+			glm::vec3 camPosTranslation = Util::PointOnSphere(1, cam_Angle_X, cam_Angle_Y) * speed* -axis[GLFW_GAMEPAD_AXIS_LEFT_Y];
+			cam_X -= camPosTranslation.x;
+			cam_Y -= camPosTranslation.y;
+			cam_Z -= camPosTranslation.z;
+		}else if(axis[GLFW_GAMEPAD_AXIS_LEFT_X] > Deadzone){
+			//take cross product of camera position and up vector to get right vector
+			glm::vec3 right = glm::cross(Util::PointOnSphere(1, cam_Angle_X, cam_Angle_Y), glm::vec3(0, 1, 0));
+			glm::vec3 camPosTranslation = right * speed*axis[GLFW_GAMEPAD_AXIS_LEFT_X];
+			cam_X -= camPosTranslation.x;
+			cam_Y -= camPosTranslation.y;
+			cam_Z -= camPosTranslation.z;
+		}else if(axis[GLFW_GAMEPAD_AXIS_LEFT_X] < -Deadzone){
+			//take cross product of camera position and up vector to get right vector
+			glm::vec3 right = glm::cross(Util::PointOnSphere(1, cam_Angle_X, cam_Angle_Y), glm::vec3(0, 1, 0));
+			glm::vec3 camPosTranslation = right * speed*-axis[GLFW_GAMEPAD_AXIS_LEFT_X];
+			cam_X += camPosTranslation.x;
+			cam_Y += camPosTranslation.y;
+			cam_Z += camPosTranslation.z;
+		}
+
+		//if rt is pressed shrink camera radius
+		if (axis[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER])
+		{
+			cam_R += speed*axis[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER];
+		}
+		//if lt is pressed grow camera radius
+		if (axis[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER])
+		{
+			cam_R -= speed*axis[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER];
+		}
+
+		if(cam_R < 0){
+			cam_R = 0;
+		}
+
+		//if rb is pressed move camera up
+		if (glfwGetJoystickButtons(GLFW_JOYSTICK_1, &count)[7])
+		{
+			cam_Y += speed;
+		}
+		//if lb is pressed move camera down
+		if (glfwGetJoystickButtons(GLFW_JOYSTICK_1, &count)[6])
+		{
+			cam_Y -= speed;
+		}
+
+		//for every button if its pressed print it to the log
+		for (int i = 0; i < 15; i++)
+		{
+			static bool pressed[15] = {false};
+			if (glfwGetJoystickButtons(GLFW_JOYSTICK_1, &count)[i] && !pressed[i])
+			{
+				PLOGD_(Util::Logs::Debug) << "Button " << i << " pressed";
+				pressed[i] = true;
+			}
+			else if (!glfwGetJoystickButtons(GLFW_JOYSTICK_1, &count)[i] && pressed[i])
+			{
+				pressed[i] = false;
+			}
+		}
 	}
-	
+
 	// if (sensor.IsInit()) {
 	// 	//draw kinect camera depth
 	// 	sensor.getDepthFrame([](void* data, int size) {
@@ -91,7 +214,6 @@ void Update(GLFWwindow* wind, int Window_Width, int Window_Height) {
 	// 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	// 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	// 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 640, 480, 0, GL_RGBA, GL_UNSIGNED_BYTE, ImageBuffer1);
-
 
 	// 	//draw kinect camera color
 	// 	glPushMatrix();
@@ -139,26 +261,35 @@ void Update(GLFWwindow* wind, int Window_Width, int Window_Height) {
 	glPopMatrix();
 }
 
-//draw functions
-void GUI(GLFWwindow* wind, int Window_Width, int Window_Height) {
-	if (ImGui::Begin("Log")) {
-		//tabs of logs
-		if (ImGui::BeginTabBar("Logs")) {
-			if (ImGui::BeginTabItem("Info")) {
+// draw functions
+void GUI(GLFWwindow *wind, int Window_Width, int Window_Height)
+{
+	// dock over viewport make suer its see through
+	// ImGui::DockSpaceOverViewport();
+
+	if (ImGui::Begin("Log"))
+	{
+		// tabs of logs
+		if (ImGui::BeginTabBar("Logs"))
+		{
+			if (ImGui::BeginTabItem("Info"))
+			{
 				for (int i = 0; i < Util::Logs::InfoLog.getMessageList().size(); i++)
 				{
 					ImGui::TextUnformatted(Util::Logs::InfoLog.getMessageList()[i].c_str());
 				}
 				ImGui::EndTabItem();
 			}
-			if (ImGui::BeginTabItem("Errors")) {
+			if (ImGui::BeginTabItem("Errors"))
+			{
 				for (int i = 0; i < Util::Logs::ErrorLog.getMessageList().size(); i++)
 				{
 					ImGui::TextUnformatted(Util::Logs::ErrorLog.getMessageList()[i].c_str());
 				}
 				ImGui::EndTabItem();
 			}
-			if (ImGui::BeginTabItem("Debug")) {
+			if (ImGui::BeginTabItem("Debug"))
+			{
 				for (int i = 0; i < Util::Logs::DebugLog.getMessageList().size(); i++)
 				{
 					ImGui::TextUnformatted(Util::Logs::DebugLog.getMessageList()[i].c_str());
@@ -184,8 +315,9 @@ void GUI(GLFWwindow* wind, int Window_Width, int Window_Height) {
 		}
 	}
 	ImGui::End();
-	
-	if (ImGui::Begin("View")) {
+
+	if (ImGui::Begin("View"))
+	{
 		ImGui::Checkbox("Draw Grid", &DrawGrid);
 
 		// //radio
@@ -227,21 +359,21 @@ void GUI(GLFWwindow* wind, int Window_Width, int Window_Height) {
 	// }
 	// ImGui::End();
 
-    //GUI HERE
-	// if (ImGui::Begin("Toy Manager")) {
-	// 	if (ImGui::Button("Search")) {
-	// 		tm.NonBlocking_SearchFor(5);
-	// 	}
-	// 	std::map<std::string, Toy*> toys = tm.GetToys();
-	// 	ImGui::BeginTable("Toys", 9);
-	// 	ImGui::TableSetupColumn("Toy ID");
-	// 	ImGui::TableSetupColumn("Toy Name");
-	// 	ImGui::TableSetupColumn("Battery Level");
-	// 	ImGui::TableSetupColumn("Conected Status");
-	// 	ImGui::TableHeadersRow();
-				
+	// GUI HERE
+	//  if (ImGui::Begin("Toy Manager")) {
+	//  	if (ImGui::Button("Search")) {
+	//  		tm.NonBlocking_SearchFor(5);
+	//  	}
+	//  	std::map<std::string, Toy*> toys = tm.GetToys();
+	//  	ImGui::BeginTable("Toys", 9);
+	//  	ImGui::TableSetupColumn("Toy ID");
+	//  	ImGui::TableSetupColumn("Toy Name");
+	//  	ImGui::TableSetupColumn("Battery Level");
+	//  	ImGui::TableSetupColumn("Conected Status");
+	//  	ImGui::TableHeadersRow();
+
 	// 	for (auto it=toys.begin(); it != toys.end(); it++)
-	// 	{			
+	// 	{
 	// 		ImGui::TableNextRow();
 	// 		ImGui::TableNextColumn();
 	// 		ImGui::Text(it->second->GetID().c_str());
@@ -278,38 +410,66 @@ void GUI(GLFWwindow* wind, int Window_Width, int Window_Height) {
 	// 	ImGui::EndTable();
 	// }
 	// ImGui::End();
-	if (ImGui::Begin("Camera")) {
+	if (ImGui::Begin("Camera"))
+	{
 		ImGui::DragFloat("Deadzone", &Deadzone, 0.01f);
+		ImGui::Checkbox("Invert X", &InvertX);
+		ImGui::Checkbox("Invert Y", &InvertY);
 		ImGui::DragFloat("Camera Radius", &cam_R, 0.1f);
 		ImGui::DragFloat("Camera Speed", &speed, 0.1f);
 		ImGui::DragFloat("Camera Rotation Speed", &rotspeed, 0.1f);
+		ImGui::DragFloat("Camera X", &cam_X, 0.1f);
+		ImGui::DragFloat("Camera Y", &cam_Y, 0.1f);
+		ImGui::DragFloat("Camera Z", &cam_Z, 0.1f);
 	}
 	ImGui::End();
 }
 
-void Camera(GLFWwindow* wind, int Window_Width, int Window_Height) {
-    //CAMERA STUFF
+void Camera(GLFWwindow *wind, int Window_Width, int Window_Height)
+{
+	// CAMERA STUFF
 	gluPerspective(45, (float)Window_Width / (float)Window_Height, 0.1, 1000);
-	if (glfwJoystickPresent(GLFW_JOYSTICK_1)) {
-		//get right stick
+	if (glfwJoystickPresent(GLFW_JOYSTICK_1))
+	{
+		float v_invertY = 1;
+		float v_invertX = 1;
+		if(InvertX){
+			v_invertX = -1;
+		}
+		if(InvertY){
+			v_invertY = -1;
+		}
+		// get right stick
 		int count = 0;
-		const float* axis = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &count);
-		if (axis[GLFW_GAMEPAD_AXIS_RIGHT_X] > .1 || axis[GLFW_GAMEPAD_AXIS_RIGHT_X] < -.1|| axis[GLFW_GAMEPAD_AXIS_RIGHT_Y] > .1 || axis[GLFW_GAMEPAD_AXIS_RIGHT_Y] < -.1){
-			cam_Angle_X += Util::map<float>(axis[GLFW_GAMEPAD_AXIS_RIGHT_X], -1, 1, -M_PI, M_PI)*rotspeed;
-			cam_Angle_Y += Util::map<float>(axis[GLFW_GAMEPAD_AXIS_RIGHT_Y], -1, 1, M_PI, -M_PI)*rotspeed;
+		const float *axis = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &count);
+		if (axis[GLFW_GAMEPAD_AXIS_RIGHT_X] > .1 || axis[GLFW_GAMEPAD_AXIS_RIGHT_X] < -.1 || axis[GLFW_GAMEPAD_AXIS_RIGHT_Y] > .1 || axis[GLFW_GAMEPAD_AXIS_RIGHT_Y] < -.1)
+		{
+			cam_Angle_X += Util::map<float>(axis[GLFW_GAMEPAD_AXIS_RIGHT_X], -1, 1, -M_PI, M_PI) * rotspeed*v_invertX;
+			cam_Angle_Y += Util::map<float>(axis[GLFW_GAMEPAD_AXIS_RIGHT_Y], -1, 1, M_PI, -M_PI) * rotspeed*v_invertY;
+			// if Camera Angle Y is greater than 90 degrees limit it to 90 degrees
+			if (cam_Angle_Y > -0.001)
+			{
+				cam_Angle_Y = -0.001;
+			}
+			// if Camera Angle Y is less than -90 degrees limit it to -90 degrees
+			if (cam_Angle_Y < -M_PI + 0.001)
+			{
+				cam_Angle_Y = -M_PI + 0.001;
+			}
 		}
 	}
 	glm::vec3 campos = Util::PointOnSphere(cam_R, cam_Angle_X, cam_Angle_Y) + glm::vec3(cam_X, cam_Y, cam_Z);
 	gluLookAt(campos.x, campos.y, campos.z, cam_X, cam_Y, cam_Z, 0, 1, 0);
 }
 
-void DrawXYZGrid(float from, float to, int resolution, float lineWidth) {
+void DrawXYZGrid(float from, float to, int resolution, float lineWidth)
+{
 	float dist = to - from;
 	float stepSize = dist / resolution;
-	//draw x y z grid from -1 to 1
+	// draw x y z grid from -1 to 1
 	glLineWidth(lineWidth);
 	glBegin(GL_LINES);
-	//x grid
+	// x grid
 	glColor3f(1, 0, 0);
 	for (float i = from; i <= to; i += dist / resolution)
 	{
@@ -318,7 +478,7 @@ void DrawXYZGrid(float from, float to, int resolution, float lineWidth) {
 		glVertex3f(i, from, 0);
 		glVertex3f(i, to, 0);
 	}
-	//y grid
+	// y grid
 	glColor3f(0, 1, 0);
 	for (float i = from; i <= to; i += dist / resolution)
 	{
@@ -327,7 +487,7 @@ void DrawXYZGrid(float from, float to, int resolution, float lineWidth) {
 		glVertex3f(i, 0, from);
 		glVertex3f(i, 0, to);
 	}
-	//z grid
+	// z grid
 	glColor3f(0, 0, 1);
 	for (float i = from; i <= to; i += dist / resolution)
 	{
@@ -339,11 +499,12 @@ void DrawXYZGrid(float from, float to, int resolution, float lineWidth) {
 	glEnd();
 }
 
-void Draw(GLFWwindow* wind, int Window_Width, int Window_Height) {
+void Draw(GLFWwindow *wind, int Window_Width, int Window_Height)
+{
 	if (DrawGrid)
 		DrawXYZGrid(-1, 1, 4, 2);
 
-	//draw cube in top right
+	// draw cube in top right
 	glPushMatrix();
 
 	// if (sensor.IsInit()) {
@@ -356,9 +517,12 @@ void Draw(GLFWwindow* wind, int Window_Width, int Window_Height) {
 	// 			});
 	// 	}
 	// }
-	Graphics::glColor(Util::HSVtoRGBA(color, 53, 66, .25));
 
+	DrawModel();
+
+	Graphics::glColor(Util::HSVtoRGBA(color, 53, 66, .25));
 	cube.Draw();
+
 	glPopMatrix();
 }
 
@@ -375,7 +539,6 @@ void Draw(GLFWwindow* wind, int Window_Width, int Window_Height) {
 // 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 // 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
 
-
 // 	glBindRenderbuffer(GL_RENDERBUFFER, renderBuffer);
 // 	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, 1280, 960);
 // 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, renderBuffer);
@@ -389,13 +552,17 @@ void Draw(GLFWwindow* wind, int Window_Width, int Window_Height) {
 // 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 // }
 
-//create main event proceassor
-class MainEventProcessor : public EventStream::EventProcessor {
-	bool HandleEvent(EventStream::Event* e) override {
+// create main event proceassor
+class MainEventProcessor : public EventStream::EventProcessor
+{
+	bool HandleEvent(EventStream::Event *e) override
+	{
 		std::string Type = e->EventType;
-		if (Type == "JoystickEvent") {
-			EventStream::JoystickEvent* je = (EventStream::JoystickEvent*)e;
-			if (glfwJoystickIsGamepad(je->jid)) {
+		if (Type == "JoystickEvent")
+		{
+			EventStream::JoystickEvent *je = (EventStream::JoystickEvent *)e;
+			if (glfwJoystickIsGamepad(je->jid))
+			{
 				PLOGD_(Util::Logs::Debug) << "Joy";
 			}
 		}
@@ -427,7 +594,7 @@ int main()
 	// 		skeletons[i].SetPosition({ 0,0,-2 });
 	// 		skeletons[i].SetScale({ 1,1,1 });
 	// }
-	world.Add(new Physics::CollisionBox({0,0,0}, {1,1,1}));
+	world.Add(new Physics::CollisionBox({0, 0, 0}, {1, 1, 1}));
 
 	// if (sensor.Init()) {
 	// 	sensor.setAngle(10);
@@ -440,13 +607,13 @@ int main()
 	window.Set_Camera_function(Camera);
 	window.Set_Draw_function(Draw);
 	window.Init();
-	
-	//InitFrameBuffer();
-	
+
+	// InitFrameBuffer();
+
 	Util::Logs::InitLogs();
 	// InitLovenseLog();
 	// InitKinectLog();
-	//render to screen	
+	// render to screen
 	window.Loop();
 	window.CleanUp();
 }

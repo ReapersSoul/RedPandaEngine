@@ -28,6 +28,9 @@
 #include <plog/Formatters/TxtFormatter.h>
 #include <plog/Formatters/FuncMessageFormatter.h>
 
+// stb
+#include <stb_image.h>
+
 #include <Utility/util.h>
 
 #include <iostream>
@@ -79,6 +82,47 @@ namespace EventStream
 
 namespace Graphics
 {
+    static GLuint LoadTexture(std::string path)
+    {
+        // load using stb
+        int width, height, nrChannels;
+        unsigned char *data = stbi_load(path.c_str(), &width, &height, &nrChannels, 0);
+        if (!data)
+        {
+            PLOGD_(Util::Logs::Error) << "Failed to load texture: " << path << "\n";
+            return 0;
+        }
+        GLuint texture;
+        glGenTextures(1, &texture);
+        glBindTexture(GL_TEXTURE_2D, texture);
+        // set the texture wrapping/filtering options (on the currently bound texture object)
+        // set texture wrapping to GL_REPEAT (default wrapping method)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // set texture wrapping to GL_REPEAT (default wrapping method)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT); // set texture wrapping to GL_REPEAT (default wrapping method)
+        // set texture filtering parameters
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); // set texture filtering to nearest neighbor
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); // set texture filtering to nearest neighbor
+        // load image, create texture and generate mipmaps
+        if (nrChannels == 3)
+        {
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB,
+                         GL_UNSIGNED_BYTE, data);
+        }
+        else if (nrChannels == 4)
+        {
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
+                         GL_UNSIGNED_BYTE, data);
+        }
+        else
+        {
+            PLOGD_(Util::Logs::Error) << "Failed to load texture: " << path << "\n";
+            return 0;
+        }
+        glGenerateMipmap(GL_TEXTURE_2D);
+        stbi_image_free(data);
+        return texture;
+    }
+
     static void glColor(glm::vec3 color)
     {
         glColor3f(color.x, color.y, color.z);
@@ -197,6 +241,9 @@ namespace Graphics
             ImGui_ImplOpenGL3_Init(glsl_version);
             ImGui_ImplGlfw_InitForOpenGL(window, true);
 
+            // docking
+            io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+
             // Setup Dear ImGui style
             ImGui::StyleColorsDark();
 
@@ -244,6 +291,7 @@ namespace Graphics
                 // draw objects here
                 Draw_function(window, windowWidth, windowHeight);
                 // end
+                glMatrixMode(GL_PROJECTION_MATRIX);
                 // gui
                 ImGui_ImplOpenGL3_NewFrame();
                 ImGui_ImplGlfw_NewFrame();
