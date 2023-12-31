@@ -1,5 +1,5 @@
 #pragma once
-#include "DEVICE.h"
+#include <Devices/DEVICE.h>
 #include <Lovense.h>
 #include <LovenseDef.h>
 #include <LovenseToyInfo.h>

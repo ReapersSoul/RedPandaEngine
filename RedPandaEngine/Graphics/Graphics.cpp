@@ -1,5 +1,4 @@
 #include "Graphics.h"
-#include "Math.h"
 
 std::vector<glm::vec3> Graphics::MeshTools::Mesh::ApplyTransform()
 {

@@ -5,16 +5,17 @@
 #include <string>
 #include <sstream>
 #include <vector>
-#include "Graphics.h"
+#include <Graphics/Graphics.h>
 //#include "Lua.h"
 //#include "Python.h"
 //#include "Language_Manager.h"
-#include "Lovense_Device.h"
-#include "Physics.h"
-#include "Kinect.h"
-#include "util.h"
+//#include <Devices/Lovense/Lovense_Device.h>
+//#include <Devices/Kinect/Kinect.h>
 
-ToyManager tm;
+#include <Physics/Physics.h>
+#include <Utility/util.h>
+
+//ToyManager tm;
 
 Graphics::Window window("RedPandaEngine");
 
@@ -26,7 +27,7 @@ int seconds=0;
 char buff[255] = { 0 };
 char buff2[255]={0};
 
-Kinect::Sensor sensor;
+//Kinect::Sensor sensor;
 bool DrawGrid = true;
 bool VibrateCollision = false;
 bool VibeController = false;
@@ -41,23 +42,23 @@ float color = 0;
 Graphics::MeshTools::Shapes::Cube cube;
 Physics::World world;
 
-Kinect::Skeleton skeletons[NUI_SKELETON_COUNT];
+//Kinect::Skeleton skeletons[NUI_SKELETON_COUNT];
 
 void Update(GLFWwindow* wind, int Window_Width, int Window_Height) {
 	if (glfwJoystickPresent(GLFW_JOYSTICK_1)) {
 		int count;
 		const float* axis = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &count);
 		color = Util::map<float>(axis[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER], -1, 1, 0, 360);
-		if (VibeController) {
-			if (tm.GetToys().size() > 0) {
-				if (tm.GetToy(0)->GetConnected()) {
-					int vibelevel = floor(Util::map<float>(axis[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER], -1, 1, 0, 20));
-					if (vibelevel != tm.GetToy(0)->GetVibrationLevel()) {
-						tm.GetToy(0)->RequestVibrate(vibelevel);
-					}
-				}
-			}
-		}
+		// if (VibeController) {
+		// 	if (tm.GetToys().size() > 0) {
+		// 		if (tm.GetToy(0)->GetConnected()) {
+		// 			int vibelevel = floor(Util::map<float>(axis[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER], -1, 1, 0, 20));
+		// 			if (vibelevel != tm.GetToy(0)->GetVibrationLevel()) {
+		// 				tm.GetToy(0)->RequestVibrate(vibelevel);
+		// 			}
+		// 		}
+		// 	}
+		// }
 		glm::vec3 camPos=glm::vec3(0);
 		//use left stick to move camera position based on where cam is looking
 		//check deadzone
@@ -74,65 +75,65 @@ void Update(GLFWwindow* wind, int Window_Width, int Window_Height) {
 		
 	}
 	
-	if (sensor.IsInit()) {
-		//draw kinect camera depth
-		sensor.getDepthFrame([](void* data, int size) {
-			delete ImageBuffer1;
-			ImageBuffer1 = malloc(size);
-			memcpy(ImageBuffer1, data, size);
-			});
-		//bind image to texture id
-		glDeleteTextures(1, &TextureID);
-		glGenTextures(1, &TextureID);
-		glBindTexture(GL_TEXTURE_2D, TextureID);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 640, 480, 0, GL_RGBA, GL_UNSIGNED_BYTE, ImageBuffer1);
+	// if (sensor.IsInit()) {
+	// 	//draw kinect camera depth
+	// 	sensor.getDepthFrame([](void* data, int size) {
+	// 		delete ImageBuffer1;
+	// 		ImageBuffer1 = malloc(size);
+	// 		memcpy(ImageBuffer1, data, size);
+	// 		});
+	// 	//bind image to texture id
+	// 	glDeleteTextures(1, &TextureID);
+	// 	glGenTextures(1, &TextureID);
+	// 	glBindTexture(GL_TEXTURE_2D, TextureID);
+	// 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	// 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	// 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	// 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	// 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 640, 480, 0, GL_RGBA, GL_UNSIGNED_BYTE, ImageBuffer1);
 
 
-		//draw kinect camera color
-		glPushMatrix();
-		//sensor.getColorFrame([](void* data, int size) {
-		//	delete ImageBuffer2;
-		//	ImageBuffer2 = malloc(size);
-		//	memcpy(ImageBuffer2, data, size);
-		//	});
-		//render to frame buffer
-		glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
-		glViewport(0, 0, 1280, 960);
-		glClearColor(0.0, 00, 00, 1.0);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		//bind image to texture id
-		glBindTexture(GL_TEXTURE_2D, texture);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1280, 960, 0, GL_BGRA, GL_UNSIGNED_BYTE, ImageBuffer2);
-		// Draw stuff
+	// 	//draw kinect camera color
+	// 	glPushMatrix();
+	// 	//sensor.getColorFrame([](void* data, int size) {
+	// 	//	delete ImageBuffer2;
+	// 	//	ImageBuffer2 = malloc(size);
+	// 	//	memcpy(ImageBuffer2, data, size);
+	// 	//	});
+	// 	//render to frame buffer
+	// 	glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
+	// 	glViewport(0, 0, 1280, 960);
+	// 	glClearColor(0.0, 00, 00, 1.0);
+	// 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	// 	//bind image to texture id
+	// 	glBindTexture(GL_TEXTURE_2D, texture);
+	// 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	// 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	// 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	// 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	// 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1280, 960, 0, GL_BGRA, GL_UNSIGNED_BYTE, ImageBuffer2);
+	// 	// Draw stuff
 
-		glMatrixMode(GL_PROJECTION_MATRIX);
-		glLoadIdentity();
-		gluPerspective(45, (float)1280 / (float)960, 0.1, 1000);
-		gluLookAt(camk[0], camk[1], camk[2], 0, 0, 0, 0, 1, 0);
-		//glTranslated(-1, 0, 0);
-		glMatrixMode(GL_MODELVIEW_MATRIX);
+	// 	glMatrixMode(GL_PROJECTION_MATRIX);
+	// 	glLoadIdentity();
+	// 	gluPerspective(45, (float)1280 / (float)960, 0.1, 1000);
+	// 	gluLookAt(camk[0], camk[1], camk[2], 0, 0, 0, 0, 1, 0);
+	// 	//glTranslated(-1, 0, 0);
+	// 	glMatrixMode(GL_MODELVIEW_MATRIX);
 
-		//get Skeleton and draw
-		NUI_SKELETON_FRAME  frame = sensor.getSkeletonFrame();
-		for (int i = 0; i < NUI_SKELETON_COUNT; i++)
-		{
-			if (frame.SkeletonData[i].eTrackingState == NUI_SKELETON_TRACKED) {
-				skeletons[i].Update(frame.SkeletonData[i]);
-			}
-			skeletons->DrawJoints(10, [&i](glm::vec4 p) {
-				Graphics::glColor(Util::HSVtoRGB(360 / (i + 1), 100, 100));
-				return p;
-				});
-		}
-	}
+	// 	//get Skeleton and draw
+	// 	NUI_SKELETON_FRAME  frame = sensor.getSkeletonFrame();
+	// 	for (int i = 0; i < NUI_SKELETON_COUNT; i++)
+	// 	{
+	// 		if (frame.SkeletonData[i].eTrackingState == NUI_SKELETON_TRACKED) {
+	// 			skeletons[i].Update(frame.SkeletonData[i]);
+	// 		}
+	// 		skeletons->DrawJoints(10, [&i](glm::vec4 p) {
+	// 			Graphics::glColor(Util::HSVtoRGB(360 / (i + 1), 100, 100));
+	// 			return p;
+	// 			});
+	// 	}
+	// }
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glViewport(0, 0, Window_Width, Window_Height);
 	glPopMatrix();
@@ -165,20 +166,20 @@ void GUI(GLFWwindow* wind, int Window_Width, int Window_Height) {
 
 				ImGui::EndTabItem();
 			}
-			if (ImGui::BeginTabItem("Lovense")) {
-				for (int i = 0; i < LovenseLog.getMessageList().size(); i++)
-				{
-					ImGui::TextUnformatted(LovenseLog.getMessageList()[i].c_str());
-				}
-				ImGui::EndTabItem();
-			}
-			if (ImGui::BeginTabItem("Kinect")) {
-				for (int i = 0; i < KinectLog.getMessageList().size(); i++)
-				{
-					ImGui::TextUnformatted(KinectLog.getMessageList()[i].c_str());
-				}
-				ImGui::EndTabItem();
-			}
+			// if (ImGui::BeginTabItem("Lovense")) {
+			// 	for (int i = 0; i < LovenseLog.getMessageList().size(); i++)
+			// 	{
+			// 		ImGui::TextUnformatted(LovenseLog.getMessageList()[i].c_str());
+			// 	}
+			// 	ImGui::EndTabItem();
+			// }
+			// if (ImGui::BeginTabItem("Kinect")) {
+			// 	for (int i = 0; i < KinectLog.getMessageList().size(); i++)
+			// 	{
+			// 		ImGui::TextUnformatted(KinectLog.getMessageList()[i].c_str());
+			// 	}
+			// 	ImGui::EndTabItem();
+			// }
 			ImGui::EndTabBar();
 		}
 	}
@@ -210,73 +211,73 @@ void GUI(GLFWwindow* wind, int Window_Width, int Window_Height) {
 	}
 	ImGui::End();
 
-	if (ImGui::Begin("Kinect")) {
-		if (sensor.IsInit()) {
-			//angle
-			static float angle = sensor.getAngle();
-			ImGui::InputFloat("angle", &angle);
-			if (angle != sensor.getAngle()) {
-				sensor.setAngle(angle);
-			}
+	// if (ImGui::Begin("Kinect")) {
+	// 	if (sensor.IsInit()) {
+	// 		//angle
+	// 		static float angle = sensor.getAngle();
+	// 		ImGui::InputFloat("angle", &angle);
+	// 		if (angle != sensor.getAngle()) {
+	// 			sensor.setAngle(angle);
+	// 		}
 
-			ImGui::Image((void*)(intptr_t)TextureID, ImVec2(640, 480));
-			ImGui::DragFloat3("XYZ", camk, .1);
-			ImGui::Image((void*)texture, ImVec2(1280, 960));
-		}
-	}
-	ImGui::End();
+	// 		ImGui::Image((void*)(intptr_t)TextureID, ImVec2(640, 480));
+	// 		ImGui::DragFloat3("XYZ", camk, .1);
+	// 		ImGui::Image((void*)texture, ImVec2(1280, 960));
+	// 	}
+	// }
+	// ImGui::End();
 
     //GUI HERE
-	if (ImGui::Begin("Toy Manager")) {
-		if (ImGui::Button("Search")) {
-			tm.NonBlocking_SearchFor(5);
-		}
-		std::map<std::string, Toy*> toys = tm.GetToys();
-		ImGui::BeginTable("Toys", 9);
-		ImGui::TableSetupColumn("Toy ID");
-		ImGui::TableSetupColumn("Toy Name");
-		ImGui::TableSetupColumn("Battery Level");
-		ImGui::TableSetupColumn("Conected Status");
-		ImGui::TableHeadersRow();
+	// if (ImGui::Begin("Toy Manager")) {
+	// 	if (ImGui::Button("Search")) {
+	// 		tm.NonBlocking_SearchFor(5);
+	// 	}
+	// 	std::map<std::string, Toy*> toys = tm.GetToys();
+	// 	ImGui::BeginTable("Toys", 9);
+	// 	ImGui::TableSetupColumn("Toy ID");
+	// 	ImGui::TableSetupColumn("Toy Name");
+	// 	ImGui::TableSetupColumn("Battery Level");
+	// 	ImGui::TableSetupColumn("Conected Status");
+	// 	ImGui::TableHeadersRow();
 				
-		for (auto it=toys.begin(); it != toys.end(); it++)
-		{			
-			ImGui::TableNextRow();
-			ImGui::TableNextColumn();
-			ImGui::Text(it->second->GetID().c_str());
-			ImGui::TableNextColumn();
-			ImGui::Text(it->second->GetName().c_str());
-			ImGui::TableNextColumn();
-			ImGui::Text(std::to_string(it->second->GetBatteryLevel()).c_str());
-			ImGui::TableNextColumn();
-			ImGui::Text(std::to_string(it->second->GetConnected()).c_str());
-			ImGui::TableNextColumn();
-			if (ImGui::Button("Connect")) {
-				it->second->RequestConnect();
-				it->second->RequestBattery();
-			}
-			ImGui::TableNextColumn();
-			if (ImGui::Button("Disconnect"))
-				it->second->RequestDisConnect();
-			ImGui::TableNextColumn();
-			if (ImGui::Button("Vibrate")) {
-				it->second->RequestVibrate(level);
-				std::string id= it->second->GetID();
-				std::thread([id]() {
-					std::this_thread::sleep_for(std::chrono::seconds(seconds));
-					tm.GetToy(id)->RequestVibrate(0);
-					}).detach();
-			}
-			ImGui::TableNextColumn();
-			ImGui::InputText("Level", buff, 255);
-			level = atoi(buff);
-			ImGui::TableNextColumn();
-			ImGui::InputText("Seconds", buff2, 255);
-			seconds = atoi(buff2);
-		}
-		ImGui::EndTable();
-	}
-	ImGui::End();
+	// 	for (auto it=toys.begin(); it != toys.end(); it++)
+	// 	{			
+	// 		ImGui::TableNextRow();
+	// 		ImGui::TableNextColumn();
+	// 		ImGui::Text(it->second->GetID().c_str());
+	// 		ImGui::TableNextColumn();
+	// 		ImGui::Text(it->second->GetName().c_str());
+	// 		ImGui::TableNextColumn();
+	// 		ImGui::Text(std::to_string(it->second->GetBatteryLevel()).c_str());
+	// 		ImGui::TableNextColumn();
+	// 		ImGui::Text(std::to_string(it->second->GetConnected()).c_str());
+	// 		ImGui::TableNextColumn();
+	// 		if (ImGui::Button("Connect")) {
+	// 			it->second->RequestConnect();
+	// 			it->second->RequestBattery();
+	// 		}
+	// 		ImGui::TableNextColumn();
+	// 		if (ImGui::Button("Disconnect"))
+	// 			it->second->RequestDisConnect();
+	// 		ImGui::TableNextColumn();
+	// 		if (ImGui::Button("Vibrate")) {
+	// 			it->second->RequestVibrate(level);
+	// 			std::string id= it->second->GetID();
+	// 			std::thread([id]() {
+	// 				std::this_thread::sleep_for(std::chrono::seconds(seconds));
+	// 				tm.GetToy(id)->RequestVibrate(0);
+	// 				}).detach();
+	// 		}
+	// 		ImGui::TableNextColumn();
+	// 		ImGui::InputText("Level", buff, 255);
+	// 		level = atoi(buff);
+	// 		ImGui::TableNextColumn();
+	// 		ImGui::InputText("Seconds", buff2, 255);
+	// 		seconds = atoi(buff2);
+	// 	}
+	// 	ImGui::EndTable();
+	// }
+	// ImGui::End();
 	if (ImGui::Begin("Camera")) {
 		ImGui::DragFloat("Camera Radius", &cam_R, 0.1f);
 		ImGui::DragFloat("Camera Speed", &speed, 0.1f);
@@ -344,16 +345,16 @@ void Draw(GLFWwindow* wind, int Window_Width, int Window_Height) {
 	//draw cube in top right
 	glPushMatrix();
 
-	if (sensor.IsInit()) {
-		//get Skeleton and draw
-		for (int i = 0; i < NUI_SKELETON_COUNT; i++)
-		{
-			skeletons[i].DrawAppliedJoints(10, [](glm::vec4 point) {
-				Graphics::glColor(Util::HSVtoRGBA(360, 0, 100, 1));
-				return point;
-				});
-		}
-	}
+	// if (sensor.IsInit()) {
+	// 	//get Skeleton and draw
+	// 	for (int i = 0; i < NUI_SKELETON_COUNT; i++)
+	// 	{
+	// 		skeletons[i].DrawAppliedJoints(10, [](glm::vec4 point) {
+	// 			Graphics::glColor(Util::HSVtoRGBA(360, 0, 100, 1));
+	// 			return point;
+	// 			});
+	// 	}
+	// }
 	Graphics::glColor(Util::HSVtoRGBA(color, 53, 66, .25));
 	cube.Draw();
 	glPopMatrix();
@@ -402,35 +403,34 @@ class MainEventProcessor : public EventStream::EventProcessor {
 
 int main()
 {
-	::ShowWindow(::GetConsoleWindow(), SW_HIDE);
 
-	for (int i = 0; i < NUI_SKELETON_COUNT; i++)
-	{
-			for (int j = 0; j < NUI_SKELETON_POSITION_COUNT; j++) {
-				Physics::LinkedCollisionPointVec4* p = new Physics::LinkedCollisionPointVec4(skeletons[i].GetAppliedJointRef(j));
-				p->onEnterCollision = [i](Physics::CollisionObject* main, Physics::CollisionObject* other) {
-					if (skeletons[i].IsTracked() && other->GetName() == "BOX")
-						PLOGD_(Util::Logs::Debug) << "Entered Collision!";
-				};
-				p->onExitCollision = [i](Physics::CollisionObject* main, Physics::CollisionObject* other) {
-					if (skeletons[i].IsTracked() && other->GetName() == "BOX")
-						PLOGD_(Util::Logs::Debug) << "Exited Collision!";
-				};
-				p->onCollision = [i](Physics::CollisionObject* main, Physics::CollisionObject* other) {
-					//if (skeletons[i].IsTracked() && other->GetName()=="BOX")
-						//PLOGD_(Util::Logs::Debug) << "Collision!";
-				};
-				world.Add(p);
-			}
-			skeletons[i].SetPosition({ 0,0,-2 });
-			skeletons[i].SetScale({ 1,1,1 });
-	}
+	// for (int i = 0; i < NUI_SKELETON_COUNT; i++)
+	// {
+	// 		for (int j = 0; j < NUI_SKELETON_POSITION_COUNT; j++) {
+	// 			Physics::LinkedCollisionPointVec4* p = new Physics::LinkedCollisionPointVec4(skeletons[i].GetAppliedJointRef(j));
+	// 			p->onEnterCollision = [i](Physics::CollisionObject* main, Physics::CollisionObject* other) {
+	// 				if (skeletons[i].IsTracked() && other->GetName() == "BOX")
+	// 					PLOGD_(Util::Logs::Debug) << "Entered Collision!";
+	// 			};
+	// 			p->onExitCollision = [i](Physics::CollisionObject* main, Physics::CollisionObject* other) {
+	// 				if (skeletons[i].IsTracked() && other->GetName() == "BOX")
+	// 					PLOGD_(Util::Logs::Debug) << "Exited Collision!";
+	// 			};
+	// 			p->onCollision = [i](Physics::CollisionObject* main, Physics::CollisionObject* other) {
+	// 				//if (skeletons[i].IsTracked() && other->GetName()=="BOX")
+	// 					//PLOGD_(Util::Logs::Debug) << "Collision!";
+	// 			};
+	// 			world.Add(p);
+	// 		}
+	// 		skeletons[i].SetPosition({ 0,0,-2 });
+	// 		skeletons[i].SetScale({ 1,1,1 });
+	// }
 	world.Add(new Physics::CollisionBox({0,0,0}, {1,1,1}));
 
-	if (sensor.Init()) {
-		sensor.setAngle(10);
-		sensor.setAngle(0);
-	}
+	// if (sensor.Init()) {
+	// 	sensor.setAngle(10);
+	// 	sensor.setAngle(0);
+	// }
 	Graphics::SetCallBackWindow(&window);
 	window.AddEventProcessor(new MainEventProcessor());
 	window.Set_Update_function(Update);
@@ -442,8 +442,8 @@ int main()
 	InitFrameBuffer();
 	
 	Util::Logs::InitLogs();
-	InitLovenseLog();
-	InitKinectLog();
+	// InitLovenseLog();
+	// InitKinectLog();
 	//render to screen	
 	window.Loop();
 	window.CleanUp();

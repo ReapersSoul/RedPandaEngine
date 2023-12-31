@@ -10,15 +10,14 @@
 #include <thread>
 //gl
 #include <GL/glew.h>
-#include <GLM/glm.hpp>
+#include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <GLFW/glfw3.h>
-#include <GL/GLU.h>
 
 //imgui
 #include <imgui.h>
-#include <backends/imgui_impl_glfw.h>
-#include <backends/imgui_impl_opengl3.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
 
 #include <iostream>
 #include <functional>
@@ -219,12 +218,12 @@ namespace Graphics {
         }
 
         int CleanUp() {
-            //ImGui_ImplOpenGL3_Shutdown();
-            //ImGui_ImplGlfw_Shutdown();
-            //ImGui::DestroyContext();
-            //glfwDestroyWindow(window);
+            ImGui_ImplOpenGL3_Shutdown();
+            ImGui_ImplGlfw_Shutdown();
+            ImGui::DestroyContext();
+            glfwDestroyWindow(window);
 
-            //glfwTerminate();
+            glfwTerminate();
             exit(EXIT_SUCCESS);
         }
         ~Window() {
