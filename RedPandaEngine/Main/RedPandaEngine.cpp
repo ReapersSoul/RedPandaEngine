@@ -52,6 +52,8 @@ Physics::World world;
 float Deadzone = 0.1f;
 // Kinect::Skeleton skeletons[NUI_SKELETON_COUNT];
 
+int joystick = -1;
+
 Assimp::Importer importer;
 const aiScene *scene;
 std::vector<GLuint> textures;
@@ -110,90 +112,98 @@ void DrawModel()
 
 void Update(GLFWwindow *wind, int Window_Width, int Window_Height)
 {
-	if (glfwJoystickPresent(GLFW_JOYSTICK_1))
+	if (joystick != -1)
 	{
-		int count;
-		const float *axis = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &count);
-		// if (VibeController) {
-		// 	if (tm.GetToys().size() > 0) {
-		// 		if (tm.GetToy(0)->GetConnected()) {
-		// 			int vibelevel = floor(Util::map<float>(axis[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER], -1, 1, 0, 20));
-		// 			if (vibelevel != tm.GetToy(0)->GetVibrationLevel()) {
-		// 				tm.GetToy(0)->RequestVibrate(vibelevel);
-		// 			}
-		// 		}
-		// 	}
-		// }
+		if (glfwJoystickPresent(joystick))
+		{
+			int count;
+			const float *axis = glfwGetJoystickAxes(joystick, &count);
+			// if (VibeController) {
+			// 	if (tm.GetToys().size() > 0) {
+			// 		if (tm.GetToy(0)->GetConnected()) {
+			// 			int vibelevel = floor(Util::map<float>(axis[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER], -1, 1, 0, 20));
+			// 			if (vibelevel != tm.GetToy(0)->GetVibrationLevel()) {
+			// 				tm.GetToy(0)->RequestVibrate(vibelevel);
+			// 			}
+			// 		}
+			// 	}
+			// }
 
-		// use left stick to move camera position based on where cam is looking
-		// check deadzone
-		if (axis[GLFW_GAMEPAD_AXIS_LEFT_Y] > Deadzone)
-		{
-			glm::vec3 camPosTranslation = Util::PointOnSphere(1, cam_Angle_X, cam_Angle_Y) * speed* axis[GLFW_GAMEPAD_AXIS_LEFT_Y];
-			cam_X += camPosTranslation.x;
-			cam_Y += camPosTranslation.y;
-			cam_Z += camPosTranslation.z;
-		}
-		else if (axis[GLFW_GAMEPAD_AXIS_LEFT_Y] < -Deadzone)
-		{
-			glm::vec3 camPosTranslation = Util::PointOnSphere(1, cam_Angle_X, cam_Angle_Y) * speed* -axis[GLFW_GAMEPAD_AXIS_LEFT_Y];
-			cam_X -= camPosTranslation.x;
-			cam_Y -= camPosTranslation.y;
-			cam_Z -= camPosTranslation.z;
-		}else if(axis[GLFW_GAMEPAD_AXIS_LEFT_X] > Deadzone){
-			//take cross product of camera position and up vector to get right vector
-			glm::vec3 right = glm::cross(Util::PointOnSphere(1, cam_Angle_X, cam_Angle_Y), glm::vec3(0, 1, 0));
-			glm::vec3 camPosTranslation = right * speed*axis[GLFW_GAMEPAD_AXIS_LEFT_X];
-			cam_X -= camPosTranslation.x;
-			cam_Y -= camPosTranslation.y;
-			cam_Z -= camPosTranslation.z;
-		}else if(axis[GLFW_GAMEPAD_AXIS_LEFT_X] < -Deadzone){
-			//take cross product of camera position and up vector to get right vector
-			glm::vec3 right = glm::cross(Util::PointOnSphere(1, cam_Angle_X, cam_Angle_Y), glm::vec3(0, 1, 0));
-			glm::vec3 camPosTranslation = right * speed*-axis[GLFW_GAMEPAD_AXIS_LEFT_X];
-			cam_X += camPosTranslation.x;
-			cam_Y += camPosTranslation.y;
-			cam_Z += camPosTranslation.z;
-		}
-
-		//if rt is pressed shrink camera radius
-		if (axis[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER])
-		{
-			cam_R += speed*axis[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER];
-		}
-		//if lt is pressed grow camera radius
-		if (axis[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER])
-		{
-			cam_R -= speed*axis[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER];
-		}
-
-		if(cam_R < 0){
-			cam_R = 0;
-		}
-
-		//if rb is pressed move camera up
-		if (glfwGetJoystickButtons(GLFW_JOYSTICK_1, &count)[7])
-		{
-			cam_Y += speed;
-		}
-		//if lb is pressed move camera down
-		if (glfwGetJoystickButtons(GLFW_JOYSTICK_1, &count)[6])
-		{
-			cam_Y -= speed;
-		}
-
-		//for every button if its pressed print it to the log
-		for (int i = 0; i < 15; i++)
-		{
-			static bool pressed[15] = {false};
-			if (glfwGetJoystickButtons(GLFW_JOYSTICK_1, &count)[i] && !pressed[i])
+			// use left stick to move camera position based on where cam is looking
+			// check deadzone
+			if (axis[GLFW_GAMEPAD_AXIS_LEFT_Y] > Deadzone)
 			{
-				PLOGD_(Util::Logs::Debug) << "Button " << i << " pressed";
-				pressed[i] = true;
+				glm::vec3 camPosTranslation = Util::PointOnSphere(1, cam_Angle_X, cam_Angle_Y) * speed * axis[GLFW_GAMEPAD_AXIS_LEFT_Y];
+				cam_X += camPosTranslation.x;
+				cam_Y += camPosTranslation.y;
+				cam_Z += camPosTranslation.z;
 			}
-			else if (!glfwGetJoystickButtons(GLFW_JOYSTICK_1, &count)[i] && pressed[i])
+			else if (axis[GLFW_GAMEPAD_AXIS_LEFT_Y] < -Deadzone)
 			{
-				pressed[i] = false;
+				glm::vec3 camPosTranslation = Util::PointOnSphere(1, cam_Angle_X, cam_Angle_Y) * speed * -axis[GLFW_GAMEPAD_AXIS_LEFT_Y];
+				cam_X -= camPosTranslation.x;
+				cam_Y -= camPosTranslation.y;
+				cam_Z -= camPosTranslation.z;
+			}
+			else if (axis[GLFW_GAMEPAD_AXIS_LEFT_X] > Deadzone)
+			{
+				// take cross product of camera position and up vector to get right vector
+				glm::vec3 right = glm::cross(Util::PointOnSphere(1, cam_Angle_X, cam_Angle_Y), glm::vec3(0, 1, 0));
+				glm::vec3 camPosTranslation = right * speed * axis[GLFW_GAMEPAD_AXIS_LEFT_X];
+				cam_X -= camPosTranslation.x;
+				cam_Y -= camPosTranslation.y;
+				cam_Z -= camPosTranslation.z;
+			}
+			else if (axis[GLFW_GAMEPAD_AXIS_LEFT_X] < -Deadzone)
+			{
+				// take cross product of camera position and up vector to get right vector
+				glm::vec3 right = glm::cross(Util::PointOnSphere(1, cam_Angle_X, cam_Angle_Y), glm::vec3(0, 1, 0));
+				glm::vec3 camPosTranslation = right * speed * -axis[GLFW_GAMEPAD_AXIS_LEFT_X];
+				cam_X += camPosTranslation.x;
+				cam_Y += camPosTranslation.y;
+				cam_Z += camPosTranslation.z;
+			}
+
+			// if rt is pressed shrink camera radius
+			if (axis[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER])
+			{
+				cam_R += speed * axis[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER];
+			}
+			// if lt is pressed grow camera radius
+			if (axis[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER])
+			{
+				cam_R -= speed * axis[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER];
+			}
+
+			if (cam_R < 0)
+			{
+				cam_R = 0;
+			}
+
+			// if rb is pressed move camera up
+			if (glfwGetJoystickButtons(joystick, &count)[7])
+			{
+				cam_Y += speed;
+			}
+			// if lb is pressed move camera down
+			if (glfwGetJoystickButtons(joystick, &count)[6])
+			{
+				cam_Y -= speed;
+			}
+
+			// for every button if its pressed print it to the log
+			for (int i = 0; i < 15; i++)
+			{
+				static bool pressed[15] = {false};
+				if (glfwGetJoystickButtons(joystick, &count)[i] && !pressed[i])
+				{
+					PLOGD_(Util::Logs::Debug) << "Button " << i << " pressed";
+					pressed[i] = true;
+				}
+				else if (!glfwGetJoystickButtons(joystick, &count)[i] && pressed[i])
+				{
+					pressed[i] = false;
+				}
 			}
 		}
 	}
@@ -412,6 +422,7 @@ void GUI(GLFWwindow *wind, int Window_Width, int Window_Height)
 	// ImGui::End();
 	if (ImGui::Begin("Camera"))
 	{
+		ImGui::InputInt("Joystick", &joystick);
 		ImGui::DragFloat("Deadzone", &Deadzone, 0.01f);
 		ImGui::Checkbox("Invert X", &InvertX);
 		ImGui::Checkbox("Invert Y", &InvertY);
@@ -429,32 +440,37 @@ void Camera(GLFWwindow *wind, int Window_Width, int Window_Height)
 {
 	// CAMERA STUFF
 	gluPerspective(45, (float)Window_Width / (float)Window_Height, 0.1, 1000);
-	if (glfwJoystickPresent(GLFW_JOYSTICK_1))
+	if (joystick != -1)
 	{
-		float v_invertY = 1;
-		float v_invertX = 1;
-		if(InvertX){
-			v_invertX = -1;
-		}
-		if(InvertY){
-			v_invertY = -1;
-		}
-		// get right stick
-		int count = 0;
-		const float *axis = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &count);
-		if (axis[GLFW_GAMEPAD_AXIS_RIGHT_X] > .1 || axis[GLFW_GAMEPAD_AXIS_RIGHT_X] < -.1 || axis[GLFW_GAMEPAD_AXIS_RIGHT_Y] > .1 || axis[GLFW_GAMEPAD_AXIS_RIGHT_Y] < -.1)
+		if (glfwJoystickPresent(joystick))
 		{
-			cam_Angle_X += Util::map<float>(axis[GLFW_GAMEPAD_AXIS_RIGHT_X], -1, 1, -M_PI, M_PI) * rotspeed*v_invertX;
-			cam_Angle_Y += Util::map<float>(axis[GLFW_GAMEPAD_AXIS_RIGHT_Y], -1, 1, M_PI, -M_PI) * rotspeed*v_invertY;
-			// if Camera Angle Y is greater than 90 degrees limit it to 90 degrees
-			if (cam_Angle_Y > -0.001)
+			float v_invertY = 1;
+			float v_invertX = 1;
+			if (InvertX)
 			{
-				cam_Angle_Y = -0.001;
+				v_invertX = -1;
 			}
-			// if Camera Angle Y is less than -90 degrees limit it to -90 degrees
-			if (cam_Angle_Y < -M_PI + 0.001)
+			if (InvertY)
 			{
-				cam_Angle_Y = -M_PI + 0.001;
+				v_invertY = -1;
+			}
+			// get right stick
+			int count = 0;
+			const float *axis = glfwGetJoystickAxes(joystick, &count);
+			if (axis[GLFW_GAMEPAD_AXIS_RIGHT_X] > .1 || axis[GLFW_GAMEPAD_AXIS_RIGHT_X] < -.1 || axis[GLFW_GAMEPAD_AXIS_RIGHT_Y] > .1 || axis[GLFW_GAMEPAD_AXIS_RIGHT_Y] < -.1)
+			{
+				cam_Angle_X += Util::map<float>(axis[GLFW_GAMEPAD_AXIS_RIGHT_X], -1, 1, -M_PI, M_PI) * rotspeed * v_invertX;
+				cam_Angle_Y += Util::map<float>(axis[GLFW_GAMEPAD_AXIS_RIGHT_Y], -1, 1, M_PI, -M_PI) * rotspeed * v_invertY;
+				// if Camera Angle Y is greater than 90 degrees limit it to 90 degrees
+				if (cam_Angle_Y > -0.001)
+				{
+					cam_Angle_Y = -0.001;
+				}
+				// if Camera Angle Y is less than -90 degrees limit it to -90 degrees
+				if (cam_Angle_Y < -M_PI + 0.001)
+				{
+					cam_Angle_Y = -M_PI + 0.001;
+				}
 			}
 		}
 	}
