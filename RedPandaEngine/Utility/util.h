@@ -3,6 +3,7 @@
 #include <iostream>
 #include <string>
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 //plog headers
 #include <plog/Log.h>
 #include <plog/Init.h>
@@ -37,7 +38,7 @@ namespace plog {
 }
 
 namespace Util {
-    float clamp(float val, float min, float max) {
+    static float clamp(float val, float min, float max) {
         if (val < min) {
             return min;
         }
@@ -47,7 +48,7 @@ namespace Util {
         return val;
     }
 
-    glm::vec3 PointOnSphere(float radius, float StickX, float StickY) {
+    static glm::vec3 PointOnSphere(float radius, float StickX, float StickY) {
         glm::vec3 point = { 0,1,0 };
         //glm::rotate
         glm::vec4 returnpoint = glm::rotate(glm::mat4(1), StickY, glm::vec3(1, 0, 0)) * glm::vec4(point, 1);

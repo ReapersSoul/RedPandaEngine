@@ -5,6 +5,7 @@
 #include <string>
 #include <sstream>
 #include <vector>
+
 #include <Graphics/Graphics.h>
 //#include "Lua.h"
 //#include "Python.h"
@@ -13,7 +14,6 @@
 //#include <Devices/Kinect/Kinect.h>
 
 #include <Physics/Physics.h>
-#include <Utility/util.h>
 
 //ToyManager tm;
 
@@ -29,19 +29,19 @@ char buff2[255]={0};
 
 //Kinect::Sensor sensor;
 bool DrawGrid = true;
-bool VibrateCollision = false;
-bool VibeController = false;
-GLuint TextureID;
-GLuint TextureID2;
-void* ImageBuffer1;
-void* ImageBuffer2;
-GLuint frameBuffer;
-GLuint renderBuffer;
-GLuint texture;
+// bool VibrateCollision = false;
+// bool VibeController = false;
+// GLuint TextureID;
+// GLuint TextureID2;
+// void* ImageBuffer1;
+// void* ImageBuffer2;
+// GLuint frameBuffer;
+// GLuint renderBuffer;
+// GLuint texture;
 float color = 0;
 Graphics::MeshTools::Shapes::Cube cube;
 Physics::World world;
-
+float Deadzone = 0.1f;
 //Kinect::Skeleton skeletons[NUI_SKELETON_COUNT];
 
 void Update(GLFWwindow* wind, int Window_Width, int Window_Height) {
@@ -62,7 +62,7 @@ void Update(GLFWwindow* wind, int Window_Width, int Window_Height) {
 		glm::vec3 camPos=glm::vec3(0);
 		//use left stick to move camera position based on where cam is looking
 		//check deadzone
-		if (axis[GLFW_GAMEPAD_AXIS_LEFT_Y] > 0.1 || axis[GLFW_GAMEPAD_AXIS_LEFT_Y] < -0.1|| axis[GLFW_GAMEPAD_AXIS_LEFT_X] > 0.1 || axis[GLFW_GAMEPAD_AXIS_LEFT_X] < -0.) {
+		if (axis[GLFW_GAMEPAD_AXIS_LEFT_Y] > Deadzone || axis[GLFW_GAMEPAD_AXIS_LEFT_Y] < -Deadzone|| axis[GLFW_GAMEPAD_AXIS_LEFT_X] > Deadzone || axis[GLFW_GAMEPAD_AXIS_LEFT_X] < -Deadzone) {
 			camPos = Util::PointOnSphere(1, cam_Angle_X, cam_Angle_Y) * glm::vec3(axis[GLFW_GAMEPAD_AXIS_LEFT_Y])*speed;
 			float tmp = camPos.x;
 			camPos.x = camPos.y;
@@ -188,26 +188,26 @@ void GUI(GLFWwindow* wind, int Window_Width, int Window_Height) {
 	if (ImGui::Begin("View")) {
 		ImGui::Checkbox("Draw Grid", &DrawGrid);
 
-		//radio
-		static int ViewMode = 2;
-		ImGui::RadioButton("None", &ViewMode, 2);
-		ImGui::RadioButton("Vibrate Collision", &ViewMode, 0);
-		ImGui::RadioButton("Vibrate Controller", &ViewMode, 1);
-		switch (ViewMode)
-		{
-		case 0:
-			//vibrate collision
-			VibrateCollision = true;
-			VibeController = false;
-			break;
-		case 1:
-			//vibrate controller
-			VibrateCollision = false;
-			VibeController = true;
-			break;
-		default:
-			break;
-		}
+		// //radio
+		// static int ViewMode = 2;
+		// ImGui::RadioButton("None", &ViewMode, 2);
+		// ImGui::RadioButton("Vibrate Collision", &ViewMode, 0);
+		// ImGui::RadioButton("Vibrate Controller", &ViewMode, 1);
+		// switch (ViewMode)
+		// {
+		// case 0:
+		// 	//vibrate collision
+		// 	VibrateCollision = true;
+		// 	VibeController = false;
+		// 	break;
+		// case 1:
+		// 	//vibrate controller
+		// 	VibrateCollision = false;
+		// 	VibeController = true;
+		// 	break;
+		// default:
+		// 	break;
+		// }
 	}
 	ImGui::End();
 
@@ -279,6 +279,7 @@ void GUI(GLFWwindow* wind, int Window_Width, int Window_Height) {
 	// }
 	// ImGui::End();
 	if (ImGui::Begin("Camera")) {
+		ImGui::DragFloat("Deadzone", &Deadzone, 0.01f);
 		ImGui::DragFloat("Camera Radius", &cam_R, 0.1f);
 		ImGui::DragFloat("Camera Speed", &speed, 0.1f);
 		ImGui::DragFloat("Camera Rotation Speed", &rotspeed, 0.1f);
@@ -356,36 +357,37 @@ void Draw(GLFWwindow* wind, int Window_Width, int Window_Height) {
 	// 	}
 	// }
 	Graphics::glColor(Util::HSVtoRGBA(color, 53, 66, .25));
+
 	cube.Draw();
 	glPopMatrix();
 }
 
-void InitFrameBuffer() {
-	//setup frame buffer, render buffer, and texture
-	glGenFramebuffers(1, &frameBuffer);
-	glGenTextures(1, &texture);
-	glGenRenderbuffers(1, &renderBuffer);
-	glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
+// void InitFrameBuffer() {
+// 	//setup frame buffer, render buffer, and texture
+// 	glGenFramebuffers(1, &frameBuffer);
+// 	glGenTextures(1, &texture);
+// 	glGenRenderbuffers(1, &renderBuffer);
+// 	glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
 
-	glBindTexture(GL_TEXTURE_2D, texture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1280, 960, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
+// 	glBindTexture(GL_TEXTURE_2D, texture);
+// 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1280, 960, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+// 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+// 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+// 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
 
 
-	glBindRenderbuffer(GL_RENDERBUFFER, renderBuffer);
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, 1280, 960);
-	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, renderBuffer);
+// 	glBindRenderbuffer(GL_RENDERBUFFER, renderBuffer);
+// 	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, 1280, 960);
+// 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, renderBuffer);
 
-	//check if frame buffer is complete
-	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-	{
-		std::cout << "frame buffer not complete" << std::endl;
-	}
-	//unbind frame buffer
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-}
+// 	//check if frame buffer is complete
+// 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+// 	{
+// 		std::cout << "frame buffer not complete" << std::endl;
+// 	}
+// 	//unbind frame buffer
+// 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+// }
 
 //create main event proceassor
 class MainEventProcessor : public EventStream::EventProcessor {
@@ -439,7 +441,7 @@ int main()
 	window.Set_Draw_function(Draw);
 	window.Init();
 	
-	InitFrameBuffer();
+	//InitFrameBuffer();
 	
 	Util::Logs::InitLogs();
 	// InitLovenseLog();
