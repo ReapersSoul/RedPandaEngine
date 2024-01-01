@@ -36,50 +36,7 @@
 #include <iostream>
 #include <functional>
 
-namespace EventStream
-{
-    struct Event
-    {
-        std::string EventType;
-    };
-    struct MouseEvent : public Event
-    {
-        int x, y;
-        int normal_x, normal_y;
-        int button;
-        int action;
-        int mods;
-        double scrollxoffset;
-        double scrollyoffset;
-    };
-    struct KeyboardEvent : public Event
-    {
-        int key;
-        int scancode;
-        int action;
-        int mods;
-    };
-    struct JoystickEvent : public Event
-    {
-        int jid;
-        int evnt;
-    };
-    struct ErrorEvent : public Event
-    {
-        int error;
-        const char *description;
-    };
-
-    class EventProcessor
-    {
-    public:
-        virtual bool HandleEvent(Event *e)
-        {
-            return true;
-        };
-    };
-}
-
+#include <Events/Events.hpp>
 namespace Graphics
 {
     static GLuint LoadTexture(std::string path)
@@ -158,8 +115,8 @@ namespace Graphics
         std::function<void(GLFWwindow *wind, int sizeX, int sizeY)> GUI_function;
         std::function<void(GLFWwindow *wind, int sizeX, int sizeY)> Update_function;
 
-        std::vector<EventStream::Event> Events;
-        std::vector<EventStream::EventProcessor *> EventProcessors;
+        std::vector<Events::Event> Events;
+        std::vector<Events::EventProcessor *> EventProcessors;
 
     public:
         GLFWwindow *GetWindow()
@@ -172,12 +129,12 @@ namespace Graphics
             Title = title;
         }
 
-        void AddEventProcessor(EventStream::EventProcessor *evp)
+        void AddEventProcessor(Events::EventProcessor *evp)
         {
             EventProcessors.push_back(evp);
         }
 
-        void PushEvent(EventStream::Event e)
+        void PushEvent(Events::Event e)
         {
             Events.push_back(e);
         }
@@ -345,7 +302,7 @@ namespace Graphics
 
     static void error_callback(int error, const char *description)
     {
-        EventStream::ErrorEvent e;
+        Events::ErrorEvent e;
         e.error = error;
         e.description = description;
         e.EventType = "ErrorEvent";
@@ -359,7 +316,7 @@ namespace Graphics
         if (!io.WantCaptureKeyboard)
         {
             // PROCESS KEYBOARD HERE
-            EventStream::KeyboardEvent e;
+            Events::KeyboardEvent e;
             e.key = key;
             e.scancode = scancode;
             e.action = action;
@@ -376,7 +333,7 @@ namespace Graphics
         if (!io.WantCaptureMouse)
         {
             // PROCESS MOUSE HERE
-            EventStream::MouseEvent e;
+            Events::MouseEvent e;
             e.x = xpos;
             e.y = ypos;
             int width, height = 0;
@@ -397,7 +354,7 @@ namespace Graphics
             // PROCESS MOUSE HERE
             double xpos, ypos;
             glfwGetCursorPos(window, &xpos, &ypos);
-            EventStream::MouseEvent e;
+            Events::MouseEvent e;
             e.action = action;
             e.button = button;
             e.mods = mods;
@@ -421,7 +378,7 @@ namespace Graphics
             // PROCESS MOUSE HERE
             double xpos, ypos;
             glfwGetCursorPos(window, &xpos, &ypos);
-            EventStream::MouseEvent e;
+            Events::MouseEvent e;
             e.scrollxoffset = xoffset;
             e.scrollyoffset = yoffset;
             e.x = xpos;
@@ -437,7 +394,7 @@ namespace Graphics
 
     static void joystick_callback(int jid, int event)
     {
-        EventStream::JoystickEvent e;
+        Events::JoystickEvent e;
         e.evnt = event;
         e.jid = jid;
         e.EventType = "JoystickEvent";

@@ -52,7 +52,7 @@ Physics::World world;
 float Deadzone = 0.1f;
 // Kinect::Skeleton skeletons[NUI_SKELETON_COUNT];
 
-int joystick = -1;
+int joystick = 1;
 
 Assimp::Importer importer;
 const aiScene *scene;
@@ -569,14 +569,14 @@ void Draw(GLFWwindow *wind, int Window_Width, int Window_Height)
 // }
 
 // create main event proceassor
-class MainEventProcessor : public EventStream::EventProcessor
+class MainEventProcessor : public Events::EventProcessor
 {
-	bool HandleEvent(EventStream::Event *e) override
+	bool HandleEvent(Events::Event *e) override
 	{
 		std::string Type = e->EventType;
 		if (Type == "JoystickEvent")
 		{
-			EventStream::JoystickEvent *je = (EventStream::JoystickEvent *)e;
+			Events::JoystickEvent *je = (Events::JoystickEvent *)e;
 			if (glfwJoystickIsGamepad(je->jid))
 			{
 				PLOGD_(Util::Logs::Debug) << "Joy";
