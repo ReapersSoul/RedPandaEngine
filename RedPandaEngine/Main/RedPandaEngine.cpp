@@ -15,7 +15,10 @@
 // #include <Devices/Lovense/Lovense_Device.h>
 // #include <Devices/Kinect/Kinect.h>
 
-#include <Physics/Physics.h>
+#include <Physics/Reality/Reality.hpp>
+#include <Physics/CollisionPrimatives/CollisionBox/CollisionBox.hpp>
+#include <Physics/CollisionPrimatives/CollisionSphere/CollisionSphere.hpp>
+
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
@@ -48,7 +51,7 @@ bool DrawGrid = true;
 // GLuint texture;
 float color = 0;
 Graphics::MeshTools::Shapes::Cube cube;
-Physics::World world;
+Reality world;
 float Deadzone = 0.1f;
 // Kinect::Skeleton skeletons[NUI_SKELETON_COUNT];
 
@@ -74,8 +77,8 @@ void DrawModel()
 			aiString path;
 			scene->mMaterials[scene->mMeshes[i]->mMaterialIndex]->GetTexture(aiTextureType_DIFFUSE, 0, &path);
 			std::string texturePath = "../../RedPandaEngine/Assets/" + std::string(path.C_Str());
-			GLuint texture = Graphics::LoadTexture(texturePath.c_str());
-			textures.push_back(texture);
+			Graphics::TextureTools::Texture texture = Graphics::TextureTools::Texture(texturePath.c_str());
+			textures.push_back(texture());
 		}
 	}
 	else
@@ -593,15 +596,15 @@ int main()
 	// {
 	// 		for (int j = 0; j < NUI_SKELETON_POSITION_COUNT; j++) {
 	// 			Physics::LinkedCollisionPointVec4* p = new Physics::LinkedCollisionPointVec4(skeletons[i].GetAppliedJointRef(j));
-	// 			p->onEnterCollision = [i](Physics::CollisionObject* main, Physics::CollisionObject* other) {
+	// 			p->onEnterCollision = [i](Physics::PhysicsObject* main, Physics::PhysicsObject* other) {
 	// 				if (skeletons[i].IsTracked() && other->GetName() == "BOX")
 	// 					PLOGD_(Util::Logs::Debug) << "Entered Collision!";
 	// 			};
-	// 			p->onExitCollision = [i](Physics::CollisionObject* main, Physics::CollisionObject* other) {
+	// 			p->onExitCollision = [i](Physics::PhysicsObject* main, Physics::PhysicsObject* other) {
 	// 				if (skeletons[i].IsTracked() && other->GetName() == "BOX")
 	// 					PLOGD_(Util::Logs::Debug) << "Exited Collision!";
 	// 			};
-	// 			p->onCollision = [i](Physics::CollisionObject* main, Physics::CollisionObject* other) {
+	// 			p->onCollision = [i](Physics::PhysicsObject* main, Physics::PhysicsObject* other) {
 	// 				//if (skeletons[i].IsTracked() && other->GetName()=="BOX")
 	// 					//PLOGD_(Util::Logs::Debug) << "Collision!";
 	// 			};
@@ -610,7 +613,7 @@ int main()
 	// 		skeletons[i].SetPosition({ 0,0,-2 });
 	// 		skeletons[i].SetScale({ 1,1,1 });
 	// }
-	world.Add(new Physics::CollisionBox({0, 0, 0}, {1, 1, 1}));
+	world.Add(new CollisionBox({0, 0, 0}, {1, 1, 1}));
 
 	// if (sensor.Init()) {
 	// 	sensor.setAngle(10);

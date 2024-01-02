@@ -1,6 +1,6 @@
 project("RedPandaEngine")
 
-add_executable(${PROJECT_NAME} "RedPandaEngine.cpp" "../Graphics/Graphics.cpp" "../Physics/Physics.cpp")
+add_executable(${PROJECT_NAME} "RedPandaEngine.cpp" "../Graphics/Graphics.cpp" "../Physics/Reality/Reality.cpp" "../Physics/PhysicsObject/PhysicsObject.cpp" "../Physics/CollisionPrimatives/CollisionBox/CollisionBox.cpp" "../Physics/CollisionPrimatives/CollisionSphere/CollisionSphere.cpp" "../Physics/CollisionPrimatives/CollisionPoint/CollisionPoint.cpp")
 
 target_include_directories(${PROJECT_NAME} PUBLIC "../")
 
